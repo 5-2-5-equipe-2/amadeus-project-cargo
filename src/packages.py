@@ -57,27 +57,17 @@ def get_cuboid_triangulated_vertices(position: numpy.array, dimension: numpy.arr
     return vertices
 
 
-class PackageType(Enum):
-    """Package type enumeration."""
-    LUGGAGE = 1
-    DOCUMENT = 2
-    FOOD = 3
-    MEDICINE = 4
-    WATER = 5
-
-
 class Package:
     """Rectangle Package class."""
 
-    def __init__(self, package_type: PackageType, weight: float, dimensions: numpy.array, description: str):
-        self.package_type = package_type
+    def __init__(self, weight: float, dimensions: numpy.array, description: str):
         self.weight = weight
         self.description = description
         self.dimensions = dimensions
         self.position = numpy.array([0, 0, 0], dtype=float)
 
     def __str__(self):
-        return f'Package({self.package_type}, {self.weight}, {self.dimensions}, {self.description})'
+        return f'Package( {self.weight}, {self.dimensions}, {self.description})'
 
     def rotate(self, axis: int):
         self.dimensions = numpy.roll(self.dimensions, axis)
@@ -96,6 +86,7 @@ class Package:
 class Container:
     """Pallet class"""
 
+    # TODO: make numba compatible
     def __init__(self, dimensions: numpy.array, position: numpy.array):
         self.packages = []
         self.dimensions = dimensions
@@ -141,6 +132,9 @@ class Container:
 
     def __str__(self):
         return f'Container: ({self.packages}, {self.dimensions}, {self.center_of_gravity}, {self.position})'
+
+    def generate_top_down_view(self, resolution_x, resolution_y):
+        pass
 
     def draw_in_plot(self):
 
@@ -197,16 +191,44 @@ class Plane:
         return center_of_gravity
 
 
+# wrapper class for a traning instance
+class TrainingInstance:
+    # TODO: finish this class
+    def __init__(self, container_dimensions: numpy.array, package_dimensions_range: numpy.array,
+                 package_weight_range: numpy.array, package_count_range: numpy.array,
+                 target_center_of_gravity: numpy.array):
+        self.container_dimensions = container_dimensions
+        self.package_dimensions_range = package_dimensions_range
+        self.package_weight_range = package_weight_range
+        self.package_count_range = package_count_range
+        self.container = Container(self.container_dimensions, numpy.array([0, 0, 0]))
+        self.target_center_of_gravity = target_center_of_gravity
+        self.fitness = 0
+
+    def __str__(self):
+        return f'TrainingInstance({self.container}, {self.fitness})'
+
+    def update_fitness(self):
+        """
+        Calculates the fitness of the training instance
+        The fitness is the distance between the target center of gravity and the actual center of gravity
+        To the fitness is subtracted the empty space in the container below and between the packages
+        For every package inserted into the container the fitness is increased by 1
+
+        :return:
+        """
+        # self.fitness =
+        pass
+
+
 if __name__ == '__main__':
     # time the execution
     start_time = time.time()
     container1 = Container(numpy.array([100, 100, 100]), numpy.array([0, 0, 0]))
     # add a 100 random packages of nearly every type to the container
     for i in range(5):
-        package_type = random.choice(list(PackageType))
         dimensions = numpy.array([random.randint(1, 10), random.randint(1, 10), random.randint(1, 10)])
-        package = Package(package_type, random.randint(1, 2), numpy.array(dimensions),
-                          f'package {i}')
+        package = Package(random.randint(1, 2), numpy.array(dimensions), f'package {i}')
         container1.add_package(package, numpy.array([random.randint(0, 100 - 10), random.randint(0, 100 - 10)]),
                                random.randint(0, 2))
 

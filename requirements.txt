@@ -1,3 +1,6 @@
-numpy
-panda3d
-matplotlib
+numpy~=1.23.1
+panda3d~=1.10.12
+matplotlib~=3.5.2
+torch~=1.12.1+cu113
+torchvision~=0.13.1+cu113
+pillow~=9.2.0
