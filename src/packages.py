@@ -9,6 +9,7 @@ from matplotlib import pyplot as plt
 import numpy
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from viewer_camera import show_world
 
 fig = plt.figure()
 ax = Axes3D(fig, auto_add_to_figure=False)

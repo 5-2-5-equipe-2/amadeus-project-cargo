@@ -1,4 +1,6 @@
 # import direct.directbase.DirectStart
+from multiprocessing import Process, freeze_support
+from time import sleep
 from direct.showbase.DirectObject import DirectObject
 from direct.showbase.ShowBase import ShowBase
 from direct.showbase.DirectObject import DirectObject
@@ -7,8 +9,10 @@ from panda3d.core import Geom, GeomTriangles, GeomVertexWriter
 from panda3d.core import GeomNode
 
 from panda3d.core import LVector3
+from panda3d.core import Thread
 import numpy as np
-
+from direct.stdpy import threading
+import random
 
 class World(DirectObject):
     def __init__(self,base):
@@ -17,7 +21,7 @@ class World(DirectObject):
         # self.environmentModel = loader.loadModel("models/environment")
         # self.environmentModel.reparentTo(render)
         # self.environmentModel.setPos(0, 20, -10)
-        self.makeCube(np.array([3, 3, 3]), np.array([0,0,0]),trans=False)
+        # self.makeCube(np.array([3, 3, 3]), np.array([0,0,0]),trans=False)
         self.cameraModel = loader.loadModel("models/camera")
         self.cameraModel.reparentTo(render)
         self.cameraModel.hide()
@@ -63,27 +67,27 @@ class World(DirectObject):
                 self.cameraModel.setH(self.cameraModel.getH() + mpos.getX() * -1)
             
         if(self.keyMap["w"] == True):
-            self.cameraModel.setY(self.cameraModel, 150 * dt)
+            self.cameraModel.setY(self.cameraModel, 10 * dt)
             print("camera moving forward")
             return task.cont
         elif(self.keyMap["s"] == True):
-            self.cameraModel.setY(self.cameraModel, -150 * dt)
+            self.cameraModel.setY(self.cameraModel, -10 * dt)
             print("camera moving backwards")
             return task.cont
         elif(self.keyMap["a"] == True):
-            self.cameraModel.setX(self.cameraModel, -100 * dt)
+            self.cameraModel.setX(self.cameraModel, -10 * dt)
             print("camera moving left")
             return task.cont
         elif(self.keyMap["d"] == True):
-            self.cameraModel.setX(self.cameraModel, 100 * dt)
+            self.cameraModel.setX(self.cameraModel, 10 * dt)
             print("camera moving right")
             return task.cont
         elif(self.keyMap["space"] == True):
-            self.cameraModel.setZ(self.cameraModel, 100 * dt)
+            self.cameraModel.setZ(self.cameraModel, 10 * dt)
             print("camera moving up")
             return task.cont
         elif(self.keyMap["shift"] == True):
-            self.cameraModel.setZ(self.cameraModel, -100 * dt)
+            self.cameraModel.setZ(self.cameraModel, -10 * dt)
             print("camera moving down")
             return task.cont
         else:
@@ -165,7 +169,7 @@ class World(DirectObject):
         snode.addGeom(square5)
 
         cube = render.attachNewNode(snode)
-        cube.hprInterval(1.5, (360, 1, 1)).loop()
+        # cube.hprInterval(1.5, (360, 1, 1)).loop()
 
         # OpenGl by default only draws "front faces" (polygons whose vertices are
         # specified CCW).
@@ -176,8 +180,32 @@ class World(DirectObject):
 
         t = DirectObject()
 
-base = ShowBase()
-base.disableMouse()
-base.camera.setPos(0, -10, 0)
-w = World(base)
-base.run()
+def show_world():
+    freeze_support()
+    # if Thread.isThreadingSupported():
+    base = ShowBase()
+    base.disableMouse()
+    base.camera.setPos(0, -10, 0)
+    w = World(base)
+    def addCube():
+        # random array for position and dimension, gaussian distribution
+        pos = np.random.normal(0, 5, 3)
+        dim = np.random.normal(0, 5, 3)
+        w.makeCube(pos,dim)
+        sleep(0.01)
+        print("cube added")
+        t = threading.Thread(target=addCube)
+        t.start()
+    t = threading.Thread(target=addCube)
+    t.start()
+    # t=threading.Thread(target=w.makeCube,args=([1,1,1],[0,0,0],))
+    # t.start()
+    base.run()
+    for i in range(10):
+        sleep(5)
+        w.makeCube([1,1,1],[0,0,0])
+        print("made cube")
+    
+
+if __name__ == '__main__':
+    show_world()
