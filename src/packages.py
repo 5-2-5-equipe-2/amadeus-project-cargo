@@ -162,11 +162,13 @@ class Container:
         # ray-cast all packages for each pixel
         for index_x, x in enumerate(np.linspace(0, self.dimensions[0], resolution_x)):
             for index_y, y in enumerate(np.linspace(0, self.dimensions[1], resolution_y)):
+                weight=0
                 for package in self.packages:
+                    weight+=package.weight
                     if package.position[0] <= x <= package.position[0] + package.dimensions[0] and \
                             package.position[1] <= y <= package.position[1] + package.dimensions[1]:
                         image[index_x, index_y, 0] = (self.dimensions[2] - package.position[2]) / self.dimensions[2]
-                        image[index_x, index_y, 1] = package.weight / self.total_package_weight
+                image[index_x, index_y, 1] = weight
         return image
 
     def draw_in_plot(self):
@@ -255,7 +257,7 @@ class TrainingInstance:
         self.fitness = (occupied_volume - package_volume) / distance
 
 
-if __name__ == '__main__':
+if __name__ == 'not__main__':
     # time the execution
     start_time = time.time()
     container1 = Container(numpy.array([100, 100, 100]), numpy.array([0, 0, 0]))
@@ -273,3 +275,5 @@ if __name__ == '__main__':
     # calculate the center of gravity
     # container1.draw_in_plot()
     # container1.update_center_of_gravity()
+
+if __name__=="__main__"
