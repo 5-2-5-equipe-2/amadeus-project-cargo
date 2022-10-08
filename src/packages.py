@@ -8,6 +8,7 @@ from matplotlib import pyplot as plt
 import numpy
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from viewer_camera import show_world
 
 fig = plt.figure()
 ax = Axes3D(fig, auto_add_to_figure=False)
@@ -134,7 +135,7 @@ class Container:
         return f'Container: ({self.packages}, {self.dimensions}, {self.center_of_gravity}, {self.position})'
 
     def generate_top_down_view(self, resolution_x, resolution_y):
-        pass
+        pass #TODO
 
     def draw_in_plot(self):
 
