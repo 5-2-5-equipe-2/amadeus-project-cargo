@@ -3,6 +3,7 @@ import time
 from enum import Enum
 from itertools import combinations, product
 
+import numpy as np
 from matplotlib import pyplot as plt
 
 import numpy
@@ -60,7 +61,7 @@ def get_cuboid_triangulated_vertices(position: numpy.array, dimension: numpy.arr
 class Package:
     """Rectangle Package class."""
 
-    def __init__(self, weight: float, dimensions: numpy.array, description: str):
+    def __init__(self, weight: float, dimensions: numpy.array, description: str = ''):
         self.weight = weight
         self.description = description
         self.dimensions = dimensions
@@ -87,13 +88,17 @@ class Container:
     """Pallet class"""
 
     # TODO: make numba compatible
-    def __init__(self, dimensions: numpy.array, position: numpy.array):
+    def __init__(self, dimensions: numpy.array, position: numpy.array,image_resolution_x: int = 100, image_resolution_y: int = 100):
         self.packages = []
         self.dimensions = dimensions
         self.position = position  # is the bottom left corner of the container
-        self.total_weight = 0
-        self.total_volume = 0
+        self.total_package_weight = 0
+        self.total_package_volume = 0
         self.center_of_gravity = self.get_center()
+        self.highest_package = None
+        self.image = numpy.zeros((image_resolution_x, image_resolution_y, 3), dtype=numpy.float32)
+        self.x_map = np.linspace(0, self.dimensions[0], image_resolution_x)
+        self.y_map = np.linspace(0, self.dimensions[1], image_resolution_y)
 
     def get_center(self):
         return self.position + self.dimensions / 2
@@ -120,21 +125,48 @@ class Container:
         else:
             package.position = numpy.array([position_2d[0], position_2d[1], 0])
         self.packages.append(package)
-        self.total_weight += package.weight
-        self.total_volume += package.get_volume()
-        self.center_of_gravity += ((package.get_center() - self.get_center()) * package.weight) / self.total_weight
+        self.total_package_weight += package.weight
+        self.total_package_volume += package.get_volume()
+        if self.highest_package is None or package.position[2] > self.highest_package.position[2]:
+            self.highest_package = package
+
+        self.center_of_gravity += ((
+                                           package.get_center() - self.get_center()) * package.weight) / self.total_package_weight
+
+        # update the image in the container over the cross-section of the package
+
+        # for x in range(int(position_2d[0]), int(position_2d[0] + package.dimensions[0])):
+        #     for y in range(int(position_2d[1]), int(position_2d[1] + package.dimensions[1])):
 
         ax.scatter(self.center_of_gravity[0], self.center_of_gravity[1],
                    self.center_of_gravity[2], color='green')
 
-    def get_volume(self):
-        return numpy.prod(self.dimensions)
+    def get_volume(self, height=None):
+        if height is None:
+            height = self.dimensions[2]
+        return self.dimensions[0] * self.dimensions[1] * height
 
     def __str__(self):
         return f'Container: ({self.packages}, {self.dimensions}, {self.center_of_gravity}, {self.position})'
 
     def generate_top_down_view(self, resolution_x, resolution_y):
-        pass
+        """
+        Generates a 2d image of the top-down view with the packages height in the red channel and the packages weight in
+        the green channel.
+        :param resolution_x: The resolution in x direction.
+        :param resolution_y: The resolution in y direction.
+        :return: The 2d image.
+        """
+        image = numpy.zeros((resolution_x, resolution_y, 3), dtype=numpy.float32)
+        # ray-cast all packages for each pixel
+        for index_x, x in enumerate(np.linspace(0, self.dimensions[0], resolution_x)):
+            for index_y, y in enumerate(np.linspace(0, self.dimensions[1], resolution_y)):
+                for package in self.packages:
+                    if package.position[0] <= x <= package.position[0] + package.dimensions[0] and \
+                            package.position[1] <= y <= package.position[1] + package.dimensions[1]:
+                        image[index_x, index_y, 0] = (self.dimensions[2] - package.position[2]) / self.dimensions[2]
+                        image[index_x, index_y, 1] = package.weight / self.total_package_weight
+        return image
 
     def draw_in_plot(self):
 
@@ -191,7 +223,7 @@ class Plane:
         return center_of_gravity
 
 
-# wrapper class for a traning instance
+# wrapper class for a training instance
 class TrainingInstance:
     # TODO: finish this class
     def __init__(self, container_dimensions: numpy.array, package_dimensions_range: numpy.array,
@@ -211,14 +243,15 @@ class TrainingInstance:
     def update_fitness(self):
         """
         Calculates the fitness of the training instance
-        The fitness is the distance between the target center of gravity and the actual center of gravity
-        To the fitness is subtracted the empty space in the container below and between the packages
-        For every package inserted into the container the fitness is increased by 1
-
+        The fitness is the volume of the container to the highest package minus the volumes of the packages
+        divided by the distance of the center of gravity to the target center of gravity
         :return:
         """
-        # self.fitness =
-        pass
+        occupied_volume = self.container.get_volume(
+            self.container.highest_package.position[2] + self.container.highest_package.dimensions[2])
+        package_volume = self.container.total_package_volume
+        distance = numpy.linalg.norm(self.container.center_of_gravity - self.target_center_of_gravity)
+        self.fitness = (occupied_volume - package_volume) / distance
 
 
 if __name__ == '__main__':
@@ -226,12 +259,16 @@ if __name__ == '__main__':
     start_time = time.time()
     container1 = Container(numpy.array([100, 100, 100]), numpy.array([0, 0, 0]))
     # add a 100 random packages of nearly every type to the container
-    for i in range(5):
+    for i in range(200):
         dimensions = numpy.array([random.randint(1, 10), random.randint(1, 10), random.randint(1, 10)])
         package = Package(random.randint(1, 2), numpy.array(dimensions), f'package {i}')
         container1.add_package(package, numpy.array([random.randint(0, 100 - 10), random.randint(0, 100 - 10)]),
                                random.randint(0, 2))
 
+    # show the 2d top-down view
+    plt.imshow(container1.generate_top_down_view(200, 200))
+    plt.show()
+
     # calculate the center of gravity
-    container1.draw_in_plot()
+    # container1.draw_in_plot()
     # container1.update_center_of_gravity()
