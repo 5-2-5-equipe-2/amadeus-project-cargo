@@ -1,4 +1,4 @@
-import requests as requests
+import requests
 
 
 # GET https://af-cargo-api-cargo.azuremicroservices.io/api/compartment to retrieve all compartments
@@ -30,4 +30,10 @@ def get_shipments():
 def get_luggage():
     """Get all shipments from API."""
     response = requests.get("https://af-cargo-api-cargo.azuremicroservices.io/api/luggage")
+    return response.json()
+
+
+def submit_solution(solution):
+    """Submit solution to API."""
+    response = requests.post("https://af-cargo-api-cargo.azuremicroservices.io/api/submit", json=solution)
     return response.json()
