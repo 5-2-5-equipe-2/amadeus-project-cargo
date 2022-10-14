@@ -1,4 +1,4 @@
-import requests as requests
+import requests
 
 
 # GET https://af-cargo-api-cargo.azuremicroservices.io/api/compartment to retrieve all compartments
