@@ -25,21 +25,53 @@ class Shipment:
         return f'Shipment({self.shipment_id}, {self.weight}, {self.width}, {self.height}, {self.length}, {self.volume}, {self.density})'
 
 
-def get_compartments():
-    """Get all compartments from API."""
-    response = requests.get("https://af-cargo-api-cargo.azuremicroservices.io/api/compartment")
-    return response.json()
-
-
 class ContainerType:
     def __init__(self, container_type, height, width, length):
         self.container_type = container_type
         self.height = height
         self.width = width
         self.length = length
+        self.volume = self.width * self.height * self.length
 
     def __str__(self):
         return f'ContainerType({self.container_type}, {self.height}, {self.width}, {self.length})'
+
+
+class Compartment:
+    def __init__(self, compartment_id, max_weight):
+        self.compartment_id = compartment_id
+        # self.height = height
+        # self.width = width
+        # self.length = length
+        self.containers = []
+        self.max_weight = max_weight
+
+    def __str__(self):
+        return f'Compartment({self.compartment_id}, {self.max_weight}, {self.containers})'
+
+
+class Container:
+    def __init__(self, container_type):
+        self.container_type = container_type
+        self.shipments = []
+        self.occupied_volume = 0
+        self.weight = 0
+        self.occupied_volume_percentage = 0
+
+    def add_shipment(self, shipment: Shipment):
+        self.shipments.append(shipment)
+        self.occupied_volume += shipment.volume
+        self.weight += shipment.weight
+        self.occupied_volume_percentage = self.occupied_volume / self.container_type.volume
+
+    def __str__(self):
+        return f'Container({self.container_type},{self.weight}, {self.occupied_volume_percentage}, {self.occupied_volume})'
+
+
+def get_compartments():
+    """Get all compartments from API."""
+    response = requests.get("https://af-cargo-api-cargo.azuremicroservices.io/api/compartment")
+    return response.json()
 
 
 def get_container_types():
@@ -74,8 +106,40 @@ def test_solution():
     print(get_container_types())
     print(get_shipments())
     print(get_luggage())
-    solution =  [{"compartmentId":1, "containersWithShipments": [{"containerType":"PMC","shipments":[1,3]},{"containerType":"PAG","shipments":[5]},{"containerType":"AKE","shipments":[7]}], "containersWithLuggage": [{"containerType":"AKE","nbOfLuggage":30},{"containerType":"AKE","nbOfLuggage":38}]},{"compartmentId":2, "containersWithShipments": [{"containerType":"PMC","shipments":[2]},{"containerType":"PAG","shipments":[4,6]},{"containerType":"AKE","shipments":[9]}], "containersWithLuggage": [{"containerType":"AKE","nbOfLuggage":38},{"containerType":"AKE","nbOfLuggage":38},{"containerType":"AKE","nbOfLuggage":38},{"containerType":"AKE","nbOfLuggage":38},{"containerType":"AKE","nbOfLuggage":38},{"containerType":"AKE","nbOfLuggage":38}]},{"compartmentId":3, "containersWithShipments": [{"containerType":"PMC","shipments":[8,10]},{"containerType":"PAG","shipments":[11]},{"containerType":"AKE","shipments":[14]}]},{"compartmentId":4, "containersWithShipments": [{"containerType":"PMC","shipments":[13]},{"containerType":"PAG","shipments":[12]},{"containerType":"AKE","shipments":[14]}]},{"compartmentId":5, "containersWithLuggage": [{"containerType":"AKE","nbOfLuggage":25}]}]
+    solution = [{"compartmentId": 1, "containersWithShipments": [{"containerType": "PMC", "shipments": [1, 3]},
+                                                                 {"containerType": "PAG", "shipments": [5]},
+                                                                 {"containerType": "AKE", "shipments": [7]}],
+                 "containersWithLuggage": [{"containerType": "AKE", "nbOfLuggage": 30},
+                                           {"containerType": "AKE", "nbOfLuggage": 38}]}, {"compartmentId": 2,
+                                                                                           "containersWithShipments": [
+                                                                                               {"containerType": "PMC",
+                                                                                                "shipments": [2]},
+                                                                                               {"containerType": "PAG",
+                                                                                                "shipments": [4, 6]},
+                                                                                               {"containerType": "AKE",
+                                                                                                "shipments": [9]}],
+                                                                                           "containersWithLuggage": [
+                                                                                               {"containerType": "AKE",
+                                                                                                "nbOfLuggage": 38},
+                                                                                               {"containerType": "AKE",
+                                                                                                "nbOfLuggage": 38},
+                                                                                               {"containerType": "AKE",
+                                                                                                "nbOfLuggage": 38},
+                                                                                               {"containerType": "AKE",
+                                                                                                "nbOfLuggage": 38},
+                                                                                               {"containerType": "AKE",
+                                                                                                "nbOfLuggage": 38},
+                                                                                               {"containerType": "AKE",
+                                                                                                "nbOfLuggage": 38}]},
+                {"compartmentId": 3, "containersWithShipments": [{"containerType": "PMC", "shipments": [8, 10]},
+                                                                 {"containerType": "PAG", "shipments": [11]},
+                                                                 {"containerType": "AKE", "shipments": [14]}]},
+                {"compartmentId": 4, "containersWithShipments": [{"containerType": "PMC", "shipments": [13]},
+                                                                 {"containerType": "PAG", "shipments": [12]},
+                                                                 {"containerType": "AKE", "shipments": [14]}]},
+                {"compartmentId": 5, "containersWithLuggage": [{"containerType": "AKE", "nbOfLuggage": 25}]}]
     print(submit_solution(solution))
+
 
 if __name__ == "__main__":
     test_solution()
