@@ -2,14 +2,18 @@ import random
 import time
 from enum import Enum
 from itertools import combinations, product
-
-import numpy as np
-from matplotlib import pyplot as plt
+from multiprocessing import freeze_support
+from time import sleep
 
 import numpy
+import numpy as np
+from direct.showbase.ShowBase import ShowBase
+from direct.stdpy import threading
+from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-#from viewer_camera import show_world
+
+from viewer_camera import World
 
 fig = plt.figure()
 ax = Axes3D(fig, auto_add_to_figure=False)
@@ -94,7 +98,7 @@ class Container:
         self.packages = []
         self.dimensions = dimensions
         self.position = position  # is the bottom left corner of the container
-        self.total_package_weight = 0
+        self.total_package_weight = 500
         self.total_package_volume = 0
         self.center_of_gravity = self.get_center()
         self.highest_package = None
@@ -176,7 +180,6 @@ class Container:
         return image
 
     def draw_in_plot(self):
-
         # set the limits of the plot
         ax.set_xlim3d(0, self.dimensions[0])
         ax.set_ylim3d(0, self.dimensions[1])
@@ -264,13 +267,13 @@ class TrainingInstance:
         self.fitness = (occupied_volume - package_volume) / distance
 
 
-if __name__ == '__main__':
+def matplotlib_test():
     # time the execution
     start_time = time.time()
     container1 = Container(numpy.array(
         [100, 100, 100]), numpy.array([0, 0, 0]))
     # add a 100 random packages of nearly every type to the container
-    for i in range(200):
+    for i in range(500):
         dimensions = numpy.array(
             [random.randint(1, 10), random.randint(1, 10), random.randint(1, 10)])
         package = Package(random.randint(
@@ -286,4 +289,40 @@ if __name__ == '__main__':
     container1.draw_in_plot()
     # container1.update_center_of_gravity()
 
-# if __name__=="__main__":
+
+def panda3d_test():
+    # time the execution
+    start_time = time.time()
+    freeze_support()
+    # if Thread.isThreadingSupported():
+    base = ShowBase()
+    base.disableMouse()
+    base.camera.setPos(0, -100, 0)
+    w = World(base)
+    container1 = Container(numpy.array(
+        [100, 100, 100]), numpy.array([0, 0, 0]))
+    w.makeContainer(container1)
+
+    def addCube(l=[999]):
+        # random array for position and dimension, gaussian distribution
+        dim = numpy.array(
+            [random.randint(1, 10), random.randint(1, 10), random.randint(1, 10)])
+        package = Package(random.randint(1,10),dim)
+        container1.add_package(package, numpy.array([random.randint(0, 100 - 10), random.randint(0, 100 - 10)]),
+                               random.randint(0, 2))
+        w.makePackage(package,[random.randint(0,255)/255,random.randint(0,255)/255,random.randint(0,255)/255,0.5])
+        # sleep(0.01)
+        print("cube added")
+        l[0] -= 1
+        print(l[0])
+        if l[0] > 0:
+            t = threading.Thread(target=addCube)
+            t.start()
+
+    t = threading.Thread(target=addCube)
+    t.start()
+    base.run()
+
+
+if __name__ == '__main__':
+    panda3d_test()

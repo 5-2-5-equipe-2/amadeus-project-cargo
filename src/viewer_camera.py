@@ -1,5 +1,7 @@
 # import direct.directbase.DirectStart
-from multiprocessing import Process, freeze_support
+from multiprocessing import freeze_support
+from operator import truediv
+from struct import pack
 from time import sleep
 from direct.showbase.DirectObject import DirectObject
 from direct.showbase.ShowBase import ShowBase
@@ -9,10 +11,9 @@ from panda3d.core import Geom, GeomTriangles, GeomVertexWriter
 from panda3d.core import GeomNode
 
 from panda3d.core import LVector3
-from panda3d.core import Thread
 import numpy as np
 from direct.stdpy import threading
-import random
+# from packages import Package, Container
 
 class World(DirectObject):
     def __init__(self,base):
@@ -67,27 +68,27 @@ class World(DirectObject):
                 self.cameraModel.setH(self.cameraModel.getH() + mpos.getX() * -1)
             
         if(self.keyMap["w"] == True):
-            self.cameraModel.setY(self.cameraModel, 10 * dt)
+            self.cameraModel.setY(self.cameraModel, 50 * dt)
             print("camera moving forward")
             return task.cont
         elif(self.keyMap["s"] == True):
-            self.cameraModel.setY(self.cameraModel, -10 * dt)
+            self.cameraModel.setY(self.cameraModel, -50 * dt)
             print("camera moving backwards")
             return task.cont
         elif(self.keyMap["a"] == True):
-            self.cameraModel.setX(self.cameraModel, -10 * dt)
+            self.cameraModel.setX(self.cameraModel, -50 * dt)
             print("camera moving left")
             return task.cont
         elif(self.keyMap["d"] == True):
-            self.cameraModel.setX(self.cameraModel, 10 * dt)
+            self.cameraModel.setX(self.cameraModel, 50 * dt)
             print("camera moving right")
             return task.cont
         elif(self.keyMap["space"] == True):
-            self.cameraModel.setZ(self.cameraModel, 10 * dt)
+            self.cameraModel.setZ(self.cameraModel, 50 * dt)
             print("camera moving up")
             return task.cont
         elif(self.keyMap["shift"] == True):
-            self.cameraModel.setZ(self.cameraModel, -10 * dt)
+            self.cameraModel.setZ(self.cameraModel, -50 * dt)
             print("camera moving down")
             return task.cont
         else:
@@ -180,6 +181,12 @@ class World(DirectObject):
 
         t = DirectObject()
 
+    def makePackage(self, package, color=[255,0,0,0.5]):
+        self.makeCube(package.dimensions,package.position,color_array_ugly=[color,color,color,color],trans=False)
+
+    def makeContainer(self, container, color=[0,255,0,0.5]):
+        self.makeCube(container.dimensions,container.position,color_array_ugly=[color,color,color,color],trans=True)
+
 def show_world():
     freeze_support()
     # if Thread.isThreadingSupported():
@@ -201,11 +208,7 @@ def show_world():
     # t=threading.Thread(target=w.makeCube,args=([1,1,1],[0,0,0],))
     # t.start()
     base.run()
-    for i in range(10):
-        sleep(5)
-        w.makeCube([1,1,1],[0,0,0])
-        print("made cube")
-    
+
 
 if __name__ == '__main__':
     show_world()
