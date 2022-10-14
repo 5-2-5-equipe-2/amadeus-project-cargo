@@ -66,9 +66,27 @@ class Container:
         self.weight += shipment.weight
         self.occupied_volume_percentage = self.occupied_volume / self.container_type.volume
 
+    def full_luggage(self):
+        return self.occupied_volume_percentage == 1
+
     def __str__(self):
         return f'Container({self.container_type},{self.weight}, {self.occupied_volume_percentage}, {self.occupied_volume})'
 
+
+class LotOfLuggage(Shipment):
+    avg_weight = 20
+    nb_luggage = 38
+    def __init__(self, nb_luggage=nb_luggage):
+        super().__init__(self.avg_weight*nb_luggage, 1000, 1000, 1000, 'Luggage')
+
+    @staticmethod
+    def placeLuggages(nbluggages):
+        list_containers = []
+        while nbluggages > 0:
+            luggages = LotOfLuggage(nbluggages)
+            ake=Container(ContainerType('AKE', 1000, 1000, 1000))
+            ake.add_shipment(luggages)
+        return list_containers
 
 def get_compartments():
     """Get all compartments from API."""
