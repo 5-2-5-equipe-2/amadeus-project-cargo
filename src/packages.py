@@ -10,11 +10,16 @@ import numpy
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
+containers = {"type": "PAG", "height": 162, "width": 224, "length": 318}, \
+             {"type": "PMC", "height": 162, "width": 244, "length": 318}, \
+             {"type": "AKE", "height": 162, "width": 153, "length": 156}
+
 
 class Shipment:
     """Rectangle Shipment class."""
 
     def __init__(self, weight: float, height, width, length, awb):
+        self.shipment_id = awb
         self.weight = weight
         self.awb = awb
         self.volume = height * width * length
@@ -24,8 +29,11 @@ class Shipment:
 
 
 class Compartment:
-    def __init__(self, compartment_id, ):
-        pass
+    def __init__(self, compartment_id, max_weight):
+        self.compartment_id = compartment_id
+        self.max_weight = max_weight
+        self.shipments = []
+        self.weight = 0
 
 
 # class
