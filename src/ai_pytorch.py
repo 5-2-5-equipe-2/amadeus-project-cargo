@@ -43,7 +43,7 @@ class ReplayMemory(object):
 
 
 # Create Ai Neural Network that takes a
-# (2d image of the container + the dimensions of 10 packages) and outputs the best position and rotation for a package
+# (2d image of the container + the volume of 10 packages) and outputs the best position and rotation for a package
 class Net(torch.nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -71,7 +71,7 @@ class Net(torch.nn.Module):
         linear_input_size = convw * convh * 128 + PACKAGE_INPUT_NUM * PACKAGE_DIM
         # the dense layer model is composed of 4 fully connected layers with relu activation functions
         # and a linear output layer.
-        # The dimensions data of the packages is concatenated to the output of the last convolutional layer.
+        # The volume data of the packages is concatenated to the output of the last convolutional layer.
         # The output of the dense layer is the position and rotation of the package
         # as well as the selected package index
         self.dense_layers = torch.nn.Sequential(
@@ -91,7 +91,7 @@ class Net(torch.nn.Module):
         x = self.conv_layers(image)
         # the output of the convolutional layers is flattened
         x = x.view(x.size(0), -1)
-        # the package dimensions are concatenated to the output of the convolutional layers
+        # the package volume are concatenated to the output of the convolutional layers
         x = torch.cat((x, list_of_package_dimensions), 1)
         # the output of the convolutional layers is passed through the dense layers
         x = self.dense_layers(x)
