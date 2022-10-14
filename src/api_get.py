@@ -10,6 +10,65 @@ import base64
 # POST https://af-cargo-api-cargo.azuremicroservices.io/api/submit to submit your answer with an object containing the 5 compartment with their containers and shipments (shipment id list).
 # POST http://localhost:8081/api/graph to transform the solution into the image (base64 encoded)
 
+class Shipment:
+    """Rectangle Shipment class."""
+
+    def __init__(self, weight: float, height, width, length, awb):
+        self.shipment_id = awb
+        self.weight = weight
+        self.awb = awb
+        self.width = width
+        self.height = height
+        self.length = length
+        self.volume = self.width * self.height * self.length
+        self.density = self.weight / self.volume
+
+    def __str__(self):
+        return f'Shipment({self.shipment_id}, {self.weight}, {self.width}, {self.height}, {self.length}, {self.volume}, {self.density})'
+
+
+class ContainerType:
+    def __init__(self, container_type, height, width, length):
+        self.container_type = container_type
+        self.height = height
+        self.width = width
+        self.length = length
+        self.volume = self.width * self.height * self.length
+
+    def __str__(self):
+        return f'ContainerType({self.container_type}, {self.height}, {self.width}, {self.length})'
+
+
+class Compartment:
+    def __init__(self, compartment_id, max_weight):
+        self.compartment_id = compartment_id
+        # self.height = height
+        # self.width = width
+        # self.length = length
+        self.containers = []
+        self.max_weight = max_weight
+
+    def __str__(self):
+        return f'Compartment({self.compartment_id}, {self.max_weight}, {self.containers})'
+
+
+class Container:
+    def __init__(self, container_type):
+        self.container_type = container_type
+        self.shipments = []
+        self.occupied_volume = 0
+        self.weight = 0
+        self.occupied_volume_percentage = 0
+
+    def add_shipment(self, shipment: Shipment):
+        self.shipments.append(shipment)
+        self.occupied_volume += shipment.volume
+        self.weight += shipment.weight
+        self.occupied_volume_percentage = self.occupied_volume / self.container_type.volume
+
+    def __str__(self):
+        return f'Container({self.container_type},{self.weight}, {self.occupied_volume_percentage}, {self.occupied_volume})'
+
 
 def get_compartments():
     """Get all compartments from API."""
@@ -20,13 +79,15 @@ def get_compartments():
 def get_container_types():
     """Get all container types from API."""
     response = requests.get("https://af-cargo-api-cargo.azuremicroservices.io/api/container")
-    return response.json()
+    return [ContainerType(container_type["type"], container_type["height"], container_type["width"],
+                          container_type["length"]) for container_type in response.json()]
 
 
 def get_shipments():
     """Get all shipments from API."""
     response = requests.get("https://af-cargo-api-cargo.azuremicroservices.io/api/shipment")
-    return response.json()
+    return [Shipment(shipment["weight"], shipment["height"], shipment["width"], shipment["length"], shipment["awb"]) for
+            shipment in response.json()]
 
 
 def get_luggage():
@@ -59,6 +120,6 @@ def test_solution(solution = [{"compartmentId":1, "containersWithShipments": [{"
     print(submit_solution(solution))
     get_graph()
 
+
 if __name__ == "__main__":
     test_solution()
-
