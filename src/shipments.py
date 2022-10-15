@@ -1,4 +1,5 @@
 import itertools
+import random
 from typing import Dict, List
 from api_get import (Container, ContainerType, Shipment, get_container_types,
                      get_shipments, Compartment, LotOfLuggage, DEFAULT_CONTAINER_COMBINATIONS, get_luggage,
@@ -33,25 +34,47 @@ def find_best_container_combination(container_dict: Dict[ContainerType, List[Con
     for container_type in container_dict_copy:
         container_dict_copy[container_type].sort(key=lambda x: x.weight, reverse=True)
 
-    # find calculate the max weight of each combination
-    combinations_max_weight = {}
-    for combination in combinations:
-        max_weight = 0
-        combinations_max_weight[str(combination)] = {}
-        for container_type in container_dict.keys():
-            densest_containers = container_dict[container_type][:combination[container_type.container_type]]
-            max_weight += sum([container.weight for container in densest_containers])
-            combinations_max_weight[str(combination)][container_type] = densest_containers
+    def try_combination():
+        # find calculate the max weight of each combination
+        combinations_max_weight = {}
+        for combination in combinations:
+            max_weight = 0
+            combinations_max_weight[str(combination)] = {}
+            for container_type in container_dict.keys():
+                densest_containers = random.choices(container_dict[container_type],
+                                                    k=combination[container_type.container_type])
+                max_weight += sum([container.weight for container in densest_containers])
+                combinations_max_weight[str(combination)][container_type] = densest_containers
 
-        combinations_max_weight[str(combination)]["max_weight"] = max_weight
-    # find the combination with the max weight closest to the target
+            combinations_max_weight[str(combination)]["max_weight"] = max_weight
+        # find the combination with the max weight closest to the target without exceeding it
+        best_combination = None
+        curr_min = float('inf')
+        for combination in combinations_max_weight:
+            # calculate the difference between the max weight of the combination and the target
+            difference = combinations_max_weight[combination]["max_weight"] - weight_target
+            if difference == 0:  # if the difference is 0, return the combination
+                return combinations_max_weight[combination]
+            if 0 < difference < curr_min:  # if the difference is positive and less than the current minimum, update the current minimum
+                curr_min = difference
+                best_combination = combinations_max_weight[combination]
+
+        return best_combination
+
+    number_of_tries = 100000
     best_combination = None
     curr_min = float('inf')
-    for combination in combinations_max_weight:
-        if weight_target > combinations_max_weight[combination]["max_weight"] > curr_min:
-            curr_min = combinations_max_weight[combination]["max_weight"]
-            best_combination = combination
-    return combinations_max_weight[best_combination]
+    for _ in tqdm(range(number_of_tries)):
+        combination = try_combination()
+        if combination:
+            if combination["max_weight"] == weight_target:
+                return combination
+            if weight_target < combination["max_weight"] < curr_min:
+                curr_min = combination["max_weight"]
+                best_combination = combination
+
+    return best_combination
+
 
 def sort_shipments(shipments: List[Shipment], container_types: List[ContainerType]):
     """Sort shipments by size and density, to place them more effectively"""
@@ -139,12 +162,13 @@ if __name__ == '__main__':
     shipments = get_shipments()
     # Get all container types
     container_types: [ContainerType] = get_container_types()
-    container_types = list(filter(lambda x: x.container_type != "PAG", container_types))
+    # container_types = list(filter(lambda x: x.container_type != "PAG", container_types))
     # Sort shipments by size
     sorted_shipments = sort_shipments(shipments, container_types)
     # Split shipments by container types
     containers = split_shipments_by_containers(shipments, container_types)
     # add luggage to containers
+
     luggage = get_luggage()
     containers[luggage.container_type].extend(luggage.containers)
 
