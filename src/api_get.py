@@ -1,6 +1,6 @@
-"""module to get data from API with get and post."""
-import graphlib
+
 import requests
+
 import base64
 
 # GET https://af-cargo-api-cargo.azuremicroservices.io/api/compartment to retrieve all compartments
@@ -114,7 +114,7 @@ def get_luggage():
     return response.json()
 
 
-def submit_solution(solution):
+def submit_solution(solution = [{"compartmentId":1, "containersWithShipments": [{"containerType":"PMC","shipments":[1,3,4,4,6,7,8,9,10,11,12,12]},{"containerType":"PAG","shipments":[5]},{"containerType":"AKE","shipments":[7]}], "containersWithLuggage": [{"containerType":"AKE","nbOfLuggage":30},{"containerType":"AKE","nbOfLuggage":38}]},{"compartmentId":2, "containersWithShipments": [{"containerType":"PMC","shipments":[2]},{"containerType":"PAG","shipments":[4,6]},{"containerType":"AKE","shipments":[9]}], "containersWithLuggage": [{"containerType":"AKE","nbOfLuggage":38},{"containerType":"AKE","nbOfLuggage":38},{"containerType":"AKE","nbOfLuggage":38},{"containerType":"AKE","nbOfLuggage":38},{"containerType":"AKE","nbOfLuggage":38},{"containerType":"AKE","nbOfLuggage":38}]},{"compartmentId":3, "containersWithShipments": [{"containerType":"PMC","shipments":[8,10]},{"containerType":"PAG","shipments":[11]},{"containerType":"AKE","shipments":[14]}]},{"compartmentId":4, "containersWithShipments": [{"containerType":"PMC","shipments":[13]},{"containerType":"PAG","shipments":[12]},{"containerType":"AKE","shipments":[14]}]},{"compartmentId":5, "containersWithLuggage": [{"containerType":"AKE","nbOfLuggage":25}]}]):
     """Submit solution to API."""
     response = requests.post("https://af-cargo-api-cargo.azuremicroservices.io/api/submit", json=solution)
     return response.json()
@@ -129,13 +129,13 @@ def get_graph(solution = {"law":167608.3,"warnings":[{"error":{"code":"WARN01","
     g.write(base64.b64decode(response.json()["graph.png"]))
     g.close()
 
-def test_solution(solution = [{"compartmentId":1, "containersWithShipments": [{"containerType":"PMC","shipments":[1,3,4,4,6,7,8,9,10,11,12,12]},{"containerType":"PAG","shipments":[5]},{"containerType":"AKE","shipments":[7]}], "containersWithLuggage": [{"containerType":"AKE","nbOfLuggage":30},{"containerType":"AKE","nbOfLuggage":38}]},{"compartmentId":2, "containersWithShipments": [{"containerType":"PMC","shipments":[2]},{"containerType":"PAG","shipments":[4,6]},{"containerType":"AKE","shipments":[9]}], "containersWithLuggage": [{"containerType":"AKE","nbOfLuggage":38},{"containerType":"AKE","nbOfLuggage":38},{"containerType":"AKE","nbOfLuggage":38},{"containerType":"AKE","nbOfLuggage":38},{"containerType":"AKE","nbOfLuggage":38},{"containerType":"AKE","nbOfLuggage":38}]},{"compartmentId":3, "containersWithShipments": [{"containerType":"PMC","shipments":[8,10]},{"containerType":"PAG","shipments":[11]},{"containerType":"AKE","shipments":[14]}]},{"compartmentId":4, "containersWithShipments": [{"containerType":"PMC","shipments":[13]},{"containerType":"PAG","shipments":[12]},{"containerType":"AKE","shipments":[14]}]},{"compartmentId":5, "containersWithLuggage": [{"containerType":"AKE","nbOfLuggage":25}]}]):
+def test_solution():
     """Test solution."""
     print(get_compartments())
     print(get_container_types())
     print(get_shipments())
     print(get_luggage())
-    print(submit_solution(solution))
+    print(submit_solution())
     get_graph()
 
 
