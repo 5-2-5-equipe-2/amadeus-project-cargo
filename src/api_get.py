@@ -208,6 +208,7 @@ class LotOfLuggage:  # class for the luggage, a type of shipment
         ) + LotOfLuggage.split_luggage_into_containers(
             first_class_luggage, avg_weight, container_type, number_of_luggage_by_container
         )
+        self.total_weight = sum([container.weight for container in self.containers])
 
     @staticmethod
     def split_luggage_into_containers(nb_luggage, avg_weight, container_type, number_of_luggage_by_container):
@@ -220,6 +221,7 @@ class LotOfLuggage:  # class for the luggage, a type of shipment
             container.occupied_volume = container.container_type.volume
             container.occupied_volume_percentage = 1
             container.density = container.weight / container.container_type.volume
+            container.nb_luggage = number_of_luggage_by_container
             containers.append(container)
         if remaining_luggage > 0:
             container = Container(container_type)
@@ -228,6 +230,7 @@ class LotOfLuggage:  # class for the luggage, a type of shipment
                     remaining_luggage / number_of_luggage_by_container)
             container.occupied_volume_percentage = container.occupied_volume / container.container_type.volume
             container.density = container.weight / container.container_type.volume
+            container.nb_luggage = remaining_luggage
             containers.append(container)
         return containers
 
@@ -257,7 +260,7 @@ def get_container_types():
 def get_shipments():
     """Get all shipments from API."""
     response = requests.get("https://af-cargo-api-cargo.azuremicroservices.io/api/shipment")
-    return [Shipment(shipment["weight"], shipment["height"], shipment["width"], shipment["length"], shipment["awb"]) for
+    return [Shipment(shipment["weight"], shipment["height"], shipment["width"], shipment["length"], shipment["awb"],shipment["id"]) for
             shipment in response.json()]
 
 

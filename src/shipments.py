@@ -1,5 +1,6 @@
 import itertools
 import random
+from copy import deepcopy
 from typing import Dict, List
 from api_get import (Container, ContainerType, Shipment, get_container_types,
                      get_shipments, Compartment, LotOfLuggage, DEFAULT_CONTAINER_COMBINATIONS, get_luggage,
@@ -8,24 +9,6 @@ from tqdm import tqdm
 
 VOLUME_MAX_PERCENTAGE = 0.9
 
-
-def finding_closet_containers(list_of_containers: List[Container], target, depth):
-    """Method to find a subset of containers with a mass closest to the target.
-    Useful for fitting the mass in the compartments of a container."""
-    curr_min = float('inf')
-    best_subset = None
-    # iterate through all combinations of containers
-    for subset in itertools.combinations(list_of_containers, depth):
-        weight = sum([container.weight for container in list_of_containers])
-        # if the sum of the weights of the containers is perfectly equal to the target, return the list of containers
-        if weight == target:
-            return best_subset
-        # if the sum of the weights of the containers is less than the target,
-        # but greater than the current minimum, update the current minimum
-        if target > weight > curr_min:
-            curr_min = weight
-            best_subset = subset
-    return best_subset
 
 
 def find_best_container_combination(container_dict_copy: Dict[ContainerType, List[Container]],
@@ -58,7 +41,7 @@ def find_best_container_combination(container_dict_copy: Dict[ContainerType, Lis
         return best_combination
 
     # find the best combination closest to the target without exceeding it
-    number_of_tries = 1000
+    number_of_tries = 100000
     best_combination = None
     curr_max = float('-inf')
     for _ in tqdm(range(number_of_tries)):
@@ -122,7 +105,9 @@ def split_shipments_by_containers(shipments: List[Shipment], container_types: Li
 
 
 def split_containers_by_compartments(container_dict: Dict[ContainerType, List[Container]],
-                                     compartments: List[Compartment]):
+                                     compartments: List[Compartment],
+                                     container_combinations: [Dict[str, List[Dict[str, int]]]],
+                                     compartments_max_weight: Dict[str, float]):
     """Split containers by compartments."""
     compartments_dict = {}
     # sort compartments by compartment_id
@@ -141,8 +126,8 @@ def split_containers_by_compartments(container_dict: Dict[ContainerType, List[Co
                 container_dict_without_containers[container_type].append(container)
 
     containers_combination_aft, indexes = find_best_container_combination(container_dict_without_containers,
-                                                                          DEFAULT_CONTAINER_COMBINATIONS["AFT"],
-                                                                          DEFAULT_COMPARTMENTS_MAX_WEIGHT["AFT"])
+                                                                          container_combinations["AFT"],
+                                                                          compartments_max_weight["AFT"])
     container_dict_without_containers2 = {}
     for container_type in container_dict_without_containers:
         container_dict_without_containers2[container_type] = []
@@ -150,8 +135,8 @@ def split_containers_by_compartments(container_dict: Dict[ContainerType, List[Co
             if i not in indexes[container_type]:
                 container_dict_without_containers2[container_type].append(container)
     containers_combination_fwd, indexes = find_best_container_combination(container_dict_without_containers2,
-                                                                          DEFAULT_CONTAINER_COMBINATIONS["FWD"],
-                                                                          DEFAULT_COMPARTMENTS_MAX_WEIGHT["FWD"])
+                                                                          container_combinations["FWD"],
+                                                                          compartments_max_weight["FWD"])
 
     return containers_combination_small, containers_combination_aft, containers_combination_fwd, container_dict
 
@@ -170,10 +155,27 @@ if __name__ == '__main__':
     # add luggage to containers
 
     luggage = get_luggage()
+    container_combinations = {
+        "FWD": [],
+        "AFT": [],
+    }
+    for combination in DEFAULT_CONTAINER_COMBINATIONS["FWD"]:
+        combination["AKE"] -= len(luggage.containers)
+        if combination["AKE"] >= 0:
+            container_combinations["FWD"].append(combination)
+    for combination in DEFAULT_CONTAINER_COMBINATIONS["AFT"]:
+        container_combinations["AFT"].append(combination)
+    compartments_max_weight = {}
+    for compartment in DEFAULT_COMPARTMENTS_MAX_WEIGHT:
+        if compartment == "FWD":
+            compartments_max_weight[compartment] = DEFAULT_COMPARTMENTS_MAX_WEIGHT[compartment] - luggage.total_weight
+        else:
+            compartments_max_weight[compartment] = DEFAULT_COMPARTMENTS_MAX_WEIGHT[compartment]
+
     # containers[luggage.container_type].extend(luggage.containers)
     containers_combination_small, containers_combination_aft, containers_combination_fwd, container_dict = split_containers_by_compartments(
-        containers, get_compartments())
-    
+        containers, get_compartments(), container_combinations, compartments_max_weight)
+    containers_combination_aft[list(containers_combination_aft.keys())[0]].extend(luggage.containers)
 
     submit_json = []
     submit_json.append({"compartmentId": 1, "containersWithShipments": [], "containersWithLuggage": []})
@@ -181,30 +183,36 @@ if __name__ == '__main__':
         if container_type != "max_weight":
             for container in containers_combination_fwd[container_type]:
                 if container.is_required:
-                    submit_json[0]["containersWithLuggage"].append({"containerType": "AKE", "nbOfLuggage": container.nb_luggage})
+                    submit_json[0]["containersWithLuggage"].append(
+                        {"containerType": "AKE", "nbOfLuggage": container.nb_luggage})
                 else:
                     submit_json[0]["containersWithShipments"].append({"containerType": container_type.container_type,
-                                                              "shipments": [shipment.id for shipment in container.shipments]})
+                                                                      "shipments": [shipment.id for shipment in
+                                                                                    container.shipments]})
     submit_json.append({"compartmentId": 3, "containersWithShipments": [], "containersWithLuggage": []})
 
     for container_type in containers_combination_aft:
         if container_type != "max_weight":
             for container in containers_combination_aft[container_type]:
                 if container.is_required:
-                    submit_json[1]["containersWithLuggage"].append({"containerType": "AKE", "nbOfLuggage": container.nb_luggage})
+                    submit_json[1]["containersWithLuggage"].append(
+                        {"containerType": "AKE", "nbOfLuggage": container.nb_luggage})
                 else:
                     submit_json[1]["containersWithShipments"].append({"containerType": container_type.container_type,
-                                                                  "shipments": [shipment.id for shipment in container.shipments]})
-    
+                                                                      "shipments": [shipment.id for shipment in
+                                                                                    container.shipments]})
+
     submit_json.append({"compartmentId": 5, "containersWithShipments": [], "containersWithLuggage": []})
     for container_type in containers_combination_small:
         if container_type != "max_weight":
             for container in containers_combination_small[container_type]:
                 if container.is_required:
-                    submit_json[2]["containersWithLuggage"].append({"containerType": "AKE", "nbOfLuggage": container.nb_luggage})
+                    submit_json[2]["containersWithLuggage"].append(
+                        {"containerType": "AKE", "nbOfLuggage": container.nb_luggage})
                 else:
                     submit_json[2]["containersWithShipments"].append({"containerType": container_type.container_type,
-                                                                  "shipments": [shipment.id for shipment in container.shipments]})
+                                                                      "shipments": [shipment.id for shipment in
+                                                                                    container.shipments]})
     print(submit_json)
     print(submit_solution(submit_json))
     # containers_combination_small_json = {
@@ -216,7 +224,5 @@ if __name__ == '__main__':
     #         container_with_shipments = []
     #
     #
-
-
 
     pass
