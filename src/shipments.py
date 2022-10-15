@@ -234,12 +234,12 @@ def split_containers_by_compartments(container_dict: Dict[ContainerType, List[Co
 
     # start filling compartments with the highest compartment_id
     for compartment in compartments:
-        pass
+        container_combinations = DEFAULT_CONTAINER_COMBINATIONS[compartment.compartment_id]
+
+
 
 
 # find the containers that add up the closest to the max_weight of the compartment
-
-
 if __name__ == '__main__':
     # # Get all shipments
     # shipments = get_shipments()
