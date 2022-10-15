@@ -15,14 +15,85 @@ DEFAULT_CONTAINER_COMBINATIONS = {
         },
         {
             'PMC': 0,
+            'PAG': 1,
+            'AKE': 16
+        },
+        {
+            'PMC': 1,
+            'PAG': 1,
+            'AKE': 14
+        },
+
+        {
+            'PMC': 0,
+            'PAG': 2,
+            'AKE': 12
+        },
+        {
+            'PMC': 0,
+            'PAG': 3,
+            'AKE': 10
+        },
+        {
+            'PMC': 0,
+            'PAG': 4,
+            'AKE': 6,
+        },
+        {
+            'PMC': 0,
+            'PAG': 5,
+            'AKE': 2
+        },
+        {
+            'PMC': 0,
+            'PAG': 6,
+            'AKE': 0,
+        },
+    ],
+    2: [
+        {
+            'PMC': 0,
             'PAG': 0,
             'AKE': 20
         },
+        {
+            'PMC': 0,
+            'PAG': 1,
+            'AKE': 16
+        },
+        {
+            'PMC': 1,
+            'PAG': 1,
+            'AKE': 14
+        },
 
-
+        {
+            'PMC': 0,
+            'PAG': 2,
+            'AKE': 12
+        },
+        {
+            'PMC': 0,
+            'PAG': 3,
+            'AKE': 10
+        },
+        {
+            'PMC': 0,
+            'PAG': 4,
+            'AKE': 6,
+        },
+        {
+            'PMC': 0,
+            'PAG': 5,
+            'AKE': 2
+        },
+        {
+            'PMC': 0,
+            'PAG': 6,
+            'AKE': 0,
+        },
     ],
 
-    
 
 
     3: [
