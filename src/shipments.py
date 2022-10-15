@@ -1,18 +1,20 @@
-import itertools
 import random
-from copy import deepcopy
 from typing import Dict, List
-from api_get import (Container, ContainerType, Shipment, get_container_types,
-                     get_shipments, Compartment, LotOfLuggage, DEFAULT_CONTAINER_COMBINATIONS, get_luggage,
-                     DEFAULT_COMPARTMENTS_MAX_WEIGHT, get_compartments, submit_solution)
+
 from tqdm import tqdm
+
+from api_get import (DEFAULT_COMPARTMENTS_MAX_WEIGHT,
+                     DEFAULT_CONTAINER_COMBINATIONS, DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT, Compartment, Container,
+                     ContainerType, LotOfLuggage, Shipment, get_compartments,
+                     get_container_types, get_luggage, get_shipments,
+                     submit_solution)
 
 VOLUME_MAX_PERCENTAGE = 0.9
 
 
 
 def find_best_container_combination(container_dict_copy: Dict[ContainerType, List[Container]],
-                                    combinations: [Dict[str, int]],
+                                    combinations: List[Dict[str, int]],
                                     weight_target: float,
                                     ):
     """Find the best container combination for a compartment."""
@@ -175,7 +177,10 @@ if __name__ == '__main__':
     # containers[luggage.container_type].extend(luggage.containers)
     containers_combination_small, containers_combination_aft, containers_combination_fwd, container_dict = split_containers_by_compartments(
         containers, get_compartments(), container_combinations, compartments_max_weight)
-    containers_combination_aft[list(containers_combination_aft.keys())[0]].extend(luggage.containers)
+    compartment_1, compartment_2, compartment_3, compartment_4, compartment_5 = get_compartments()
+
+    for c1 in DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT[1]:
+        pass
 
     submit_json = []
     submit_json.append({"compartmentId": 1, "containersWithShipments": [], "containersWithLuggage": []})
