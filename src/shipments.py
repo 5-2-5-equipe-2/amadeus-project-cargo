@@ -1,7 +1,8 @@
 from typing import Dict, List
 
-from api_get import get_container_types, ContainerType, get_shipments, Shipment, Container, Compartment
 import itertools
+from api_get import (Container, ContainerType, Shipment, get_container_types,
+                     get_shipments)
 
 VOLUME_MAX_PERCENTAGE = 0.9
 
@@ -34,7 +35,7 @@ def finding_closet_containers(list_of_containers: [Container], target, depth):
     return min(closest)[1]
 
 
-def sort_shipments(shipments: [Shipment], container_types: [ContainerType]):
+def sort_shipments(shipments: List[Shipment], container_types: List[ContainerType]):
     """Sort shipments by size."""
     shipments_dict = {}
 
@@ -57,7 +58,7 @@ def sort_shipments(shipments: [Shipment], container_types: [ContainerType]):
     return shipments_dict
 
 
-def split_shipments_by_containers(shipments: [Shipment], container_types: [ContainerType]):
+def split_shipments_by_containers(shipments: List[Shipment], container_types: List[ContainerType]):
     """Split shipments by container types."""
     shipments_dict = sort_shipments(shipments, container_types)
     container_dict = {}

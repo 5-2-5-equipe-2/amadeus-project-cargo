@@ -1,7 +1,8 @@
 
-import requests
-
 import base64
+from typing import List
+
+import requests
 
 # GET https://af-cargo-api-cargo.azuremicroservices.io/api/compartment to retrieve all compartments
 # GET https://af-cargo-api-cargo.azuremicroservices.io/api/container to retrieve all container types
@@ -78,19 +79,20 @@ class Container:
         return f'Container({self.container_type},{self.weight}, {self.occupied_volume_percentage}, {self.occupied_volume})'
 
 
-class LotOfLuggage(Shipment):
-    avg_weight = 20
-    nb_luggage = 38
-    def __init__(self, nb_luggage=nb_luggage):
-        super().__init__(self.avg_weight*nb_luggage, 1000, 1000, 1000, 'Luggage')
+class LotOfLuggage(Shipment): #class for the luggage, a type of shipment
+    avg_weight = 20 #average weight of a luggage
+    nb_luggage = 38 #number of luggage fitting in a AKE container
+    def __init__(self, nb_luggage : int=nb_luggage, avg_weight : float=avg_weight):
+        super().__init__(avg_weight*nb_luggage, 1000, 1000, 1000, 'Luggage') #the luggages must fill the container
 
     @staticmethod
-    def placeLuggages(nbluggages):
+    def placeLuggages(nbluggages : int) -> List[Container]:      #method to create the containers needed to fit the luggages
         list_containers = []
         while nbluggages > 0:
             luggages = LotOfLuggage(nbluggages)
             ake=Container(ContainerType('AKE', 1000, 1000, 1000))
             ake.add_shipment(luggages)
+            list_containers.append(ake)
         return list_containers
 
 def get_compartments():
