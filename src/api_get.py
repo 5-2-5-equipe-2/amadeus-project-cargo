@@ -133,7 +133,11 @@ class Shipment:
 
 
 class ContainerType:
+    container_type_id = 0
+
     def __init__(self, container_type, height, width, length, max_weight, tare_weight):
+        Container.container_id += 1
+        self.container_type_id = Container.container_id
         self.container_type = container_type
         self.height = height
         self.width = width
@@ -165,7 +169,11 @@ class Compartment:
 
 
 class Container:
+    container_id = 0
+
     def __init__(self, container_type: ContainerType, is_required=False):
+        Container.container_id += 1
+        self.container_id = Container.container_id
         self.container_type = container_type
         self.shipments = []
         self.occupied_volume = 0
@@ -185,7 +193,7 @@ class Container:
         return self.occupied_volume_percentage == 1
 
     def __str__(self):
-        return f'Container({self.is_required=}, {self.density=}, {self.container_type=}, {self.weight=}, {self.occupied_volume_percentage=}, {self.occupied_volume=})'
+        return f'Container({self.container_id} , {self.is_required=}, {self.density=}, {self.container_type=}, {self.weight=}, {self.occupied_volume_percentage=}, {self.occupied_volume=})'
 
 
 class LotOfLuggage:  # class for the luggage, a type of shipment
@@ -226,8 +234,8 @@ class LotOfLuggage:  # class for the luggage, a type of shipment
 @lru_cache(maxsize=None)
 def get_compartments():
     """Get all compartments from API."""
-    response = requests.get("https://af-cargo-api-cargo.azuremicroservices.io/api/compartment")
-    return response.json()
+    response = requests.get("https://af-cargo-api-cargo.azuremicroservices.io/api/compartment").json()
+    return [Compartment(compartment["compartmentId"], compartment["maxWeight"]) for compartment in response]
 
 
 @lru_cache(maxsize=None)

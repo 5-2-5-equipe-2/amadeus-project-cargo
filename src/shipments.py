@@ -3,8 +3,9 @@ import random
 from typing import Dict, List
 from api_get import (Container, ContainerType, Shipment, get_container_types,
                      get_shipments, Compartment, LotOfLuggage, DEFAULT_CONTAINER_COMBINATIONS, get_luggage,
-                     DEFAULT_COMPARTMENTS_MAX_WEIGHT)
+                     DEFAULT_COMPARTMENTS_MAX_WEIGHT, get_compartments)
 from tqdm import tqdm
+import copy
 
 VOLUME_MAX_PERCENTAGE = 0.9
 
@@ -14,25 +15,25 @@ def finding_closet_containers(list_of_containers: List[Container], target, depth
     Useful for fitting the mass in the compartments of a container."""
     curr_min = float('inf')
     best_subset = None
-    for subset in itertools.combinations(list_of_containers, depth):  # iterate through all combinations of containers
+    # iterate through all combinations of containers
+    for subset in itertools.combinations(list_of_containers, depth):
         weight = sum([container.weight for container in list_of_containers])
-        if weight == target:  # if the sum of the weights of the containers is perfectly equal to the target, return the list of containers
+        # if the sum of the weights of the containers is perfectly equal to the target, return the list of containers
+        if weight == target:
             return best_subset
-        if target > weight > curr_min:  # if the sum of the weights of the containers is less than the target, but greater than the current minimum, update the current minimum
+        # if the sum of the weights of the containers is less than the target,
+        # but greater than the current minimum, update the current minimum
+        if target > weight > curr_min:
             curr_min = weight
             best_subset = subset
     return best_subset
 
 
-def find_best_container_combination(container_dict: Dict[ContainerType, List[Container]],
+def find_best_container_combination(container_dict_copy: Dict[ContainerType, List[Container]],
                                     combinations: [Dict[str, int]],
                                     weight_target: float,
                                     ):
     """Find the best container combination for a compartment."""
-    # order container types by density
-    container_dict_copy = container_dict.copy()
-    for container_type in container_dict_copy:
-        container_dict_copy[container_type].sort(key=lambda x: x.weight, reverse=True)
 
     def try_combination():
         # find calculate the max weight of each combination
@@ -40,8 +41,8 @@ def find_best_container_combination(container_dict: Dict[ContainerType, List[Con
         for combination in combinations:
             max_weight = 0
             combinations_max_weight[str(combination)] = {}
-            for container_type in container_dict.keys():
-                densest_containers = random.choices(container_dict[container_type],
+            for container_type in container_dict_copy.keys():
+                densest_containers = random.choices(container_dict_copy[container_type],
                                                     k=combination[container_type.container_type])
                 max_weight += sum([container.weight for container in densest_containers])
                 combinations_max_weight[str(combination)][container_type] = densest_containers
@@ -49,28 +50,23 @@ def find_best_container_combination(container_dict: Dict[ContainerType, List[Con
             combinations_max_weight[str(combination)]["max_weight"] = max_weight
         # find the combination with the max weight closest to the target without exceeding it
         best_combination = None
-        curr_min = float('inf')
+        curr_max1 = float('-inf')
         for combination in combinations_max_weight:
-            # calculate the difference between the max weight of the combination and the target
-            difference = combinations_max_weight[combination]["max_weight"] - weight_target
-            if difference == 0:  # if the difference is 0, return the combination
-                return combinations_max_weight[combination]
-            if 0 < difference < curr_min:  # if the difference is positive and less than the current minimum, update the current minimum
-                curr_min = difference
+            if weight_target > combinations_max_weight[combination]["max_weight"] > curr_max1:
+                curr_max1 = combinations_max_weight[combination]["max_weight"]
                 best_combination = combinations_max_weight[combination]
 
         return best_combination
 
-    number_of_tries = 100000
+    # find the best combination closest to the target without exceeding it
+    number_of_tries = 1000
     best_combination = None
-    curr_min = float('inf')
+    curr_max = float('-inf')
     for _ in tqdm(range(number_of_tries)):
         combination = try_combination()
         if combination:
-            if combination["max_weight"] == weight_target:
-                return combination
-            if weight_target < combination["max_weight"] < curr_min:
-                curr_min = combination["max_weight"]
+            if curr_max < combination["max_weight"] <= weight_target:
+                curr_max = combination["max_weight"]
                 best_combination = combination
 
     return best_combination
@@ -129,31 +125,18 @@ def split_containers_by_compartments(container_dict: Dict[ContainerType, List[Co
     compartments.sort(key=lambda x: x.compartment_id, reverse=True)
 
     # start filling compartments with the highest compartment_id
-    for compartment in compartments:
-        compartment_combinations = None
-        if compartment.compartment_id < 3:
-            compartment_combinations = DEFAULT_CONTAINER_COMBINATIONS["FWD"]
-        else:
-            compartment_combinations = DEFAULT_CONTAINER_COMBINATIONS["AFT"]
+    containers_combination_small = find_best_container_combination(container_dict, [{"AKE": 2, "PAG": 0, "PMC": 0}],
+                                                                   2635)
 
-        # for container_combination in compartment_combinations:
-        #     # get the list of containers for the current combination
-        #     container_list = []
-        #     for container_type in container_combination:
-        #         if container_type in container_dict:
-        #             container_list.extend(container_dict[container_type])
-        #     # sort the list of containers by weight
-        #     container_list.sort(key=lambda x: x.weight, reverse=True)
-        #     # find the subset of containers with the closest mass to the target
-        #     target = compartment.max_weight
-        #     depth = compartment.max_containers
-        #     closest_containers = finding_closet_containers(container_list, target, depth)
-        #     if closest_containers is not None:
-        #         if compartment in compartments_dict:
-        #             compartments_dict[compartment].append(closest_containers)
-        #         else:
-        #             compartments_dict[compartment] = [closest_containers]
-        #         break
+    containers_combination_aft = find_best_container_combination(container_dict,
+                                                                 DEFAULT_CONTAINER_COMBINATIONS["AFT"],
+                                                                 DEFAULT_COMPARTMENTS_MAX_WEIGHT["AFT"])
+
+    containers_combination_fwd = find_best_container_combination(container_dict,
+                                                                 DEFAULT_CONTAINER_COMBINATIONS["FWD"],
+                                                                 DEFAULT_COMPARTMENTS_MAX_WEIGHT["FWD"])
+
+    return containers_combination_small, containers_combination_aft, containers_combination_fwd, container_dict
 
 
 # find the containers that add up the closest to the max_weight of the compartment
@@ -171,8 +154,17 @@ if __name__ == '__main__':
 
     luggage = get_luggage()
     containers[luggage.container_type].extend(luggage.containers)
+    best = split_containers_by_compartments(containers, get_compartments())
 
-    best = find_best_container_combination(containers, DEFAULT_CONTAINER_COMBINATIONS["FWD"],
-                                           DEFAULT_COMPARTMENTS_MAX_WEIGHT["FWD"])
-
+    # filter container for the small ones
+    # container_copy = containers.copy()
+    # for container_type in container_copy:
+    #     if container_type.container_type == "PAG" or container_type.container_type == "PMC":
+    #         container_copy[container_type] = []
+    #     else:
+    #         container_copy[container_type] = list(filter(lambda x: x.weight < 2000, containers[container_type]))
+    #
+    # best = find_best_container_combination(container_copy, [{"AKE": 2, "PAG": 0, "PMC": 0}], 2635)
+    # best = find_best_container_combination(containers, DEFAULT_CONTAINER_COMBINATIONS["AFT"],
+    #                                        DEFAULT_COMPARTMENTS_MAX_WEIGHT["AFT"])
     pass
