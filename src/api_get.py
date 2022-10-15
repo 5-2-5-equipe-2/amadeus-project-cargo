@@ -32,88 +32,150 @@ DEFAULT_COMPARTMENTS_MAX_WEIGHT = {
 DEFAULT_CONTAINER_COMBINATIONS = {
     "FWD": [
         {
-            'PMC': 0,
             'PAG': 0,
+            'PMC': 0,
             'AKE': 20
         },
         {
-            'PMC': 0,
-            'PAG': 1,
+            'PAG': 0,
+            'PMC': 1,
             'AKE': 16
         },
         {
-            'PMC': 1,
             'PAG': 1,
+            'PMC': 1,
             'AKE': 14
         },
 
         {
-            'PMC': 0,
-            'PAG': 2,
+            'PAG': 0,
+            'PMC': 2,
             'AKE': 12
         },
         {
-            'PMC': 0,
-            'PAG': 3,
+            'PAG': 0,
+            'PMC': 3,
             'AKE': 10
         },
         {
-            'PMC': 0,
-            'PAG': 4,
+            'PAG': 0,
+            'PMC': 4,
             'AKE': 6,
         },
         {
-            'PMC': 0,
-            'PAG': 5,
+            'PAG': 0,
+            'PMC': 5,
             'AKE': 2
         },
         {
-            'PMC': 0,
-            'PAG': 6,
+            'PAG': 0,
+            'PMC': 6,
             'AKE': 0,
         },
     ],
 
     "AFT": [
         {
-            "PMC": 0,
             "PAG": 0,
+            "PMC": 0,
             "AKE": 16,
         },
         {
-            "PMC": 0,
-            "PAG": 1,
+            "PAG": 0,
+            "PMC": 1,
             "AKE": 12,
         },
         {
-            "PMC": 1,
             "PAG": 1,
+            "PMC": 1,
             "AKE": 10,
         },
         {
-            "PMC": 0,
-            "PAG": 2,
+            "PAG": 0,
+            "PMC": 2,
             "AKE": 8,
         },
         {
-            "PMC": 0,
-            "PAG": 3,
+            "PAG": 0,
+            "PMC": 3,
             "AKE": 6,
         },
         {
-            "PMC": 0,
-            "PAG": 4,
+            "PAG": 0,
+            "PMC": 4,
             "AKE": 2,
         },
         {
-            "PMC": 0,
-            "PAG": 5,
+            "PAG": 0,
+            "PMC": 5,
             "AKE": 0,
         }
     ],
 
 }
 
+DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT = {
+    1: [{
+        "PMC" : 3,
+        "PAG" : 0,
+        "AKE" : 2
+    },
+    {
+        "PMC" : 2,
+        "PAG" : 0,
+        "AKE" : 2
+    },
+    {
+        "PMC" : 1,
+        "PAG" : 0,
+        "AKE" : 6
+    }],
+    2: [{
+        "PMC" : 3,
+        "PAG" : 0,
+        "AKE" : 0
+    },
+    {
+        "PMC" : 2,
+        "PAG" : 0,
+        "AKE" : 2
+    },
+    {
+        "PMC" : 1,
+        "PAG" : 1,
+        "AKE" : 4
+    }],
+    3: [{
+        "PMC" : 3,
+        "PAG" : 0,
+        "AKE" : 0
+    },
+    {
+        "PMC" : 2,
+        "PAG" : 0,
+        "AKE" : 0
+    },
+    {
+        "PMC" : 1,
+        "PAG" : 1,
+        "AKE" : 2
+    }],
+    4: [{
+        "PMC" : 2,
+        "PAG" : 0,
+        "AKE" : 0
+    },
+    {
+        "PMC" : 1,
+        "PAG" : 0,
+        "AKE" : 4
+    },
+    {
+        "PMC" : 0,
+        "PAG" : 0,
+        "AKE" : 8
+    }],
+}
 
 class Shipment:
     """Rectangle Shipment class."""
@@ -160,6 +222,7 @@ class Compartment:
         self.containers = []
         self.max_weight = max_weight
         self.weight = 0
+        self.combinations = None
 
     def add_container(self, container):
         self.containers.append(container)
