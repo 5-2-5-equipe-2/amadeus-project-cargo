@@ -14,7 +14,6 @@ containers = {"type": "PAG", "height": 162, "width": 224, "length": 318}, \
              {"type": "AKE", "height": 162, "width": 153, "length": 156}
 
 
-
 class Compartment:
     def __init__(self, compartment_id, max_weight):
         self.compartment_id = compartment_id
