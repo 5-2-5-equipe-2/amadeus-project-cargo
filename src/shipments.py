@@ -2,7 +2,7 @@ from typing import Dict, List
 
 import itertools
 from api_get import (Container, ContainerType, Shipment, get_container_types,
-                     get_shipments)
+                     get_shipments, Compartment)
 
 VOLUME_MAX_PERCENTAGE = 0.9
 
@@ -18,6 +18,7 @@ DEFAULT_CONTAINER_COMBINATIONS = {
             'PAG': 0,
             'AKE': 20
         },
+
 
     ]
 
