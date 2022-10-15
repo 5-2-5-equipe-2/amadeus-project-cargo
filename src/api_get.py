@@ -4,13 +4,111 @@ from typing import List
 
 import requests
 
-
 # GET https://af-cargo-api-cargo.azuremicroservices.io/api/compartment to retrieve all compartments
 # GET https://af-cargo-api-cargo.azuremicroservices.io/api/container to retrieve all container types
 # GET https://af-cargo-api-cargo.azuremicroservices.io/api/shipment to retrieve all shipments
 # GET https://af-cargo-api-cargo.azuremicroservices.io/api/luggage to retrieve nb of Luggage and average weight
 # POST https://af-cargo-api-cargo.azuremicroservices.io/api/submit to submit your answer with an object containing the 5 compartment with their containers and shipments (shipment id list).
 # POST http://localhost:8081/api/graph to transform the solution into the image (base64 encoded)
+DEFAULT_LUGGAGE_CONTAINER = 'AKE'
+DEFAULT_NB_LUGGAGE_PER_CONTAINER = 38
+DEFAULT_CONTAINER_TARE_WEIGHT = {
+    "PMC": 120,
+    "PAG": 125,
+    "AKE": 57,
+}
+
+DEFAULT_CONTAINER_MAX_WEIGHT = {
+    "PMC": 5102,
+    "PAG": 4676,
+    "AKE": 1587,
+}
+
+DEFAULT_CONTAINER_COMBINATIONS = {
+    "FWD": [
+        {
+            'PMC': 0,
+            'PAG': 0,
+            'AKE': 20
+        },
+        {
+            'PMC': 0,
+            'PAG': 1,
+            'AKE': 16
+        },
+        {
+            'PMC': 1,
+            'PAG': 1,
+            'AKE': 14
+        },
+
+        {
+            'PMC': 0,
+            'PAG': 2,
+            'AKE': 12
+        },
+        {
+            'PMC': 0,
+            'PAG': 3,
+            'AKE': 10
+        },
+        {
+            'PMC': 0,
+            'PAG': 4,
+            'AKE': 6,
+        },
+        {
+            'PMC': 0,
+            'PAG': 5,
+            'AKE': 2
+        },
+        {
+            'PMC': 0,
+            'PAG': 6,
+            'AKE': 0,
+        },
+    ],
+
+    "AFT": [
+        {
+            "PMC": 0,
+            "PAG": 0,
+            "AKE": 16,
+        },
+        {
+            "PMC": 0,
+            "PAG": 1,
+            "AKE": 12,
+        },
+        {
+            "PMC": 1,
+            "PAG": 1,
+            "AKE": 10,
+        },
+        {
+            "PMC": 0,
+            "PAG": 2,
+            "AKE": 8,
+        },
+        {
+            "PMC": 0,
+            "PAG": 3,
+            "AKE": 6,
+        },
+        {
+            "PMC": 0,
+            "PAG": 4,
+            "AKE": 2,
+        },
+        {
+            "PMC": 0,
+            "PAG": 5,
+            "AKE": 0,
+        }
+    ],
+
+}
+
 
 class Shipment:
     """Rectangle Shipment class."""
@@ -30,12 +128,14 @@ class Shipment:
 
 
 class ContainerType:
-    def __init__(self, container_type, height, width, length):
+    def __init__(self, container_type, height, width, length, max_weight, tare_weight):
         self.container_type = container_type
         self.height = height
         self.width = width
         self.length = length
         self.volume = self.width * self.height * self.length
+        self.max_weight = max_weight
+        self.tare_weight = tare_weight
 
     def __str__(self):
         return f'ContainerType({self.container_type}, {self.height}, {self.width}, {self.length})'
@@ -60,12 +160,13 @@ class Compartment:
 
 
 class Container:
-    def __init__(self, container_type):
+    def __init__(self, container_type: ContainerType, is_locked=False):
         self.container_type = container_type
         self.shipments = []
         self.occupied_volume = 0
-        self.weight = 0
+        self.weight = container_type.tare_weight
         self.occupied_volume_percentage = 0
+        self.is_locked = is_locked
 
     def add_shipment(self, shipment: Shipment):
         self.shipments.append(shipment)
@@ -80,22 +181,37 @@ class Container:
         return f'Container({self.container_type},{self.weight}, {self.occupied_volume_percentage}, {self.occupied_volume})'
 
 
-class LotOfLuggage(Shipment):  # class for the luggage, a type of shipment
-    avg_weight = 20  # average weight of a luggage
-    nb_luggage = 38  # number of luggage fitting in a AKE container
+class LotOfLuggage:  # class for the luggage, a type of shipment
 
-    def __init__(self, nb_luggage: int = nb_luggage, avg_weight: float = avg_weight):
-        super().__init__(avg_weight * nb_luggage, 1000, 1000, 1000, 'Luggage')  # the luggages must fill the container
+    def __init__(self, first_class_luggage, nb_luggage, avg_weight, container_type, number_of_luggage_by_container):
+        self.NB_LUGGAGE_BY_CONTAINER = nb_luggage
+        self.avg_weight = avg_weight
+        self.container_type = container_type
+        self.containers = LotOfLuggage.split_luggage_into_containers(
+            nb_luggage - first_class_luggage, avg_weight, container_type, number_of_luggage_by_container
+        ) + LotOfLuggage.split_luggage_into_containers(
+            first_class_luggage, avg_weight, container_type, number_of_luggage_by_container
+        )
 
     @staticmethod
-    def place_luggage(nb_luggage: int) -> List[Container]:  # method to create the containers needed to fit the luggage
-        list_containers = []
-        while nb_luggage > 0:
-            luggage = LotOfLuggage(nb_luggage)
-            ake = Container(ContainerType('AKE', 1000, 1000, 1000))
-            ake.add_shipment(luggage)
-            list_containers.append(ake)
-        return list_containers
+    def split_luggage_into_containers(nb_luggage, avg_weight, container_type, number_of_luggage_by_container):
+        number_of_containers = int(nb_luggage / number_of_luggage_by_container)
+        remaining_luggage = nb_luggage % number_of_luggage_by_container
+        containers = []
+        for _ in range(number_of_containers):
+            container = Container(container_type, is_locked=True)
+            container.weight = avg_weight * number_of_luggage_by_container
+            container.occupied_volume = container.container_type.volume
+            container.occupied_volume_percentage = 1
+            containers.append(container)
+        if remaining_luggage > 0:
+            container = Container(container_type)
+            container.weight = avg_weight * remaining_luggage
+            container.occupied_volume = container.container_type.volume * (
+                    remaining_luggage / number_of_luggage_by_container)
+            container.occupied_volume_percentage = container.occupied_volume / container.container_type.volume
+            containers.append(container)
+        return containers
 
 
 @lru_cache(maxsize=None)
@@ -109,8 +225,14 @@ def get_compartments():
 def get_container_types():
     """Get all container types from API."""
     response = requests.get("https://af-cargo-api-cargo.azuremicroservices.io/api/container")
-    return [ContainerType(container_type["type"], container_type["height"], container_type["width"],
-                          container_type["length"]) for container_type in response.json()]
+    return [ContainerType(container_type["type"],
+                          container_type["height"],
+                          container_type["width"],
+                          container_type["length"],
+                          DEFAULT_CONTAINER_MAX_WEIGHT[container_type["type"]],
+                          DEFAULT_CONTAINER_TARE_WEIGHT[container_type["type"]])
+            for container_type
+            in response.json()]
 
 
 @lru_cache(maxsize=None)
@@ -124,8 +246,10 @@ def get_shipments():
 @lru_cache(maxsize=None)
 def get_luggage():
     """Get all shipments from API."""
-    response = requests.get("https://af-cargo-api-cargo.azuremicroservices.io/api/luggage")
-    return response.json()
+    response = requests.get("https://af-cargo-api-cargo.azuremicroservices.io/api/luggage").json()
+    return LotOfLuggage(response["nbFirstClassLuggage"], response["nbLuggage"], response["avgWeight"],
+                        list(filter(lambda x: x.container_type == DEFAULT_LUGGAGE_CONTAINER, get_container_types()))[0],
+                        DEFAULT_NB_LUGGAGE_PER_CONTAINER)
 
 
 def submit_solution(solution=[{"compartmentId": 1, "containersWithShipments": [
@@ -183,4 +307,8 @@ def test_solution():
 
 
 if __name__ == "__main__":
+    test_luggage = get_luggage()
+    test_shipments = get_shipments()
+    test_container_types = get_container_types()
+    test_compartments = get_compartments()
     test_solution()
