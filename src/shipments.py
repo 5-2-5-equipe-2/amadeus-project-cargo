@@ -20,12 +20,89 @@ DEFAULT_CONTAINER_COMBINATIONS = {
         },
 
 
-    ]
+    ],
 
+    
+
+
+    3: [
+        {
+            "PMC": 0,
+            "PAG": 0,
+            "AKE": 16,
+        },
+        {
+            "PMC": 0,
+            "PAG": 1,
+            "AKE": 12,
+        },
+        {
+            "PMC": 1,
+            "PAG": 1,
+            "AKE": 10,
+        },
+        {
+            "PMC": 0,
+            "PAG": 2,
+            "AKE": 8,
+        },
+        {
+            "PMC": 0,
+            "PAG": 3,
+            "AKE": 6,
+        },
+        {
+            "PMC": 0,
+            "PAG": 4,
+            "AKE": 2,
+        },
+        {
+            "PMC": 0,
+            "PAG": 5,
+            "AKE": 0,
+        }
+    ],
+    4: [
+        {
+            "PMC": 0,
+            "PAG": 0,
+            "AKE": 16,
+        },
+        {
+            "PMC": 0,
+            "PAG": 1,
+            "AKE": 12,
+        },
+        {
+            "PMC": 1,
+            "PAG": 1,
+            "AKE": 10,
+        },
+        {
+            "PMC": 0,
+            "PAG": 2,
+            "AKE": 8,
+        },
+        {
+            "PMC": 0,
+            "PAG": 3,
+            "AKE": 6,
+        },
+        {
+            "PMC": 0,
+            "PAG": 4,
+            "AKE": 2,
+        },
+        {
+            "PMC": 0,
+            "PAG": 5,
+            "AKE": 0,
+        }
+    ],
 }
 
 
-def finding_closet_containers(list_of_containers: [Container], target, depth):
+def finding_closet_containers(list_of_containers: List[Container], target, depth):
     closest = []
     for subset in itertools.combinations(list_of_containers, depth):
 
