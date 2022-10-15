@@ -130,7 +130,7 @@ class Shipment:
         self.id = id
 
     def __str__(self):
-        return f'Shipment({self.shipment_id}, {self.weight}, {self.width}, {self.height}, {self.length}, {self.volume}, {self.density})'
+        return f'Shipment({self.id} , {self.shipment_id}, {self.weight}, {self.width}, {self.height}, {self.length}, {self.volume}, {self.density})'
 
 
 class ContainerType:
