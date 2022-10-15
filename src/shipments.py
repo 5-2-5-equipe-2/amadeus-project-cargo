@@ -5,7 +5,6 @@ from api_get import (Container, ContainerType, Shipment, get_container_types,
                      get_shipments, Compartment, LotOfLuggage, DEFAULT_CONTAINER_COMBINATIONS, get_luggage,
                      DEFAULT_COMPARTMENTS_MAX_WEIGHT, get_compartments)
 from tqdm import tqdm
-import copy
 
 VOLUME_MAX_PERCENTAGE = 0.9
 
@@ -68,8 +67,13 @@ def find_best_container_combination(container_dict_copy: Dict[ContainerType, Lis
             if curr_max < combination["max_weight"] <= weight_target:
                 curr_max = combination["max_weight"]
                 best_combination = combination
-
-    return best_combination
+    containers_index = {}
+    for container_type in best_combination:
+        if container_type != "max_weight":
+            containers_index[container_type] = []
+            for container in best_combination[container_type]:
+                containers_index[container_type].append(container_dict_copy[container_type].index(container))
+    return best_combination, containers_index
 
 
 def sort_shipments(shipments: List[Shipment], container_types: List[ContainerType]):
@@ -125,16 +129,29 @@ def split_containers_by_compartments(container_dict: Dict[ContainerType, List[Co
     compartments.sort(key=lambda x: x.compartment_id, reverse=True)
 
     # start filling compartments with the highest compartment_id
-    containers_combination_small = find_best_container_combination(container_dict, [{"AKE": 2, "PAG": 0, "PMC": 0}],
-                                                                   2635)
+    containers_combination_small, indexes = find_best_container_combination(container_dict,
+                                                                            [{"AKE": 2, "PAG": 0, "PMC": 0}],
+                                                                            2635)
+    # copy the container_dict in order to not modify it
+    container_dict_without_containers = {}
+    for container_type in container_dict:
+        container_dict_without_containers[container_type] = []
+        for i, container in enumerate(container_dict[container_type]):
+            if i not in indexes[container_type]:
+                container_dict_without_containers[container_type].append(container)
 
-    containers_combination_aft = find_best_container_combination(container_dict,
-                                                                 DEFAULT_CONTAINER_COMBINATIONS["AFT"],
-                                                                 DEFAULT_COMPARTMENTS_MAX_WEIGHT["AFT"])
-
-    containers_combination_fwd = find_best_container_combination(container_dict,
-                                                                 DEFAULT_CONTAINER_COMBINATIONS["FWD"],
-                                                                 DEFAULT_COMPARTMENTS_MAX_WEIGHT["FWD"])
+    containers_combination_aft, indexes = find_best_container_combination(container_dict_without_containers,
+                                                                          DEFAULT_CONTAINER_COMBINATIONS["AFT"],
+                                                                          DEFAULT_COMPARTMENTS_MAX_WEIGHT["AFT"])
+    container_dict_without_containers2 = {}
+    for container_type in container_dict_without_containers:
+        container_dict_without_containers2[container_type] = []
+        for i, container in enumerate(container_dict_without_containers[container_type]):
+            if i not in indexes[container_type]:
+                container_dict_without_containers2[container_type].append(container)
+    containers_combination_fwd, indexes = find_best_container_combination(container_dict_without_containers2,
+                                                                          DEFAULT_CONTAINER_COMBINATIONS["FWD"],
+                                                                          DEFAULT_COMPARTMENTS_MAX_WEIGHT["FWD"])
 
     return containers_combination_small, containers_combination_aft, containers_combination_fwd, container_dict
 
@@ -156,15 +173,4 @@ if __name__ == '__main__':
     containers[luggage.container_type].extend(luggage.containers)
     best = split_containers_by_compartments(containers, get_compartments())
 
-    # filter container for the small ones
-    # container_copy = containers.copy()
-    # for container_type in container_copy:
-    #     if container_type.container_type == "PAG" or container_type.container_type == "PMC":
-    #         container_copy[container_type] = []
-    #     else:
-    #         container_copy[container_type] = list(filter(lambda x: x.weight < 2000, containers[container_type]))
-    #
-    # best = find_best_container_combination(container_copy, [{"AKE": 2, "PAG": 0, "PMC": 0}], 2635)
-    # best = find_best_container_combination(containers, DEFAULT_CONTAINER_COMBINATIONS["AFT"],
-    #                                        DEFAULT_COMPARTMENTS_MAX_WEIGHT["AFT"])
     pass
