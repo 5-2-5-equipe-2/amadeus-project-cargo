@@ -170,7 +170,35 @@ if __name__ == '__main__':
     # add luggage to containers
 
     luggage = get_luggage()
-    containers[luggage.container_type].extend(luggage.containers)
-    best = split_containers_by_compartments(containers, get_compartments())
+    # containers[luggage.container_type].extend(luggage.containers)
+    containers_combination_small, containers_combination_aft, containers_combination_fwd, container_dict = split_containers_by_compartments(
+        containers, get_compartments())
+
+    pass
+
+    # containers_combination_small_json = {
+    #     "compartmentId": 5,
+    # }
+    #
+    # for container_type in containers_combination_small:
+    #     if container_type != "max_weight":
+    #         container_with_shipments = []
+    #
+    #
+    submit_json = [
+        {
+            "compartmentId": 1,
+            "containersWithShipments":
+                [
+                    {"containerType": "PMC", "shipments": [1, 3, 4, 4, 6, 7, 8, 9, 10, 11, 12, 12]},
+                    {"containerType": "PAG", "shipments": [5]},
+                    {"containerType": "AKE", "shipments": [7]}
+                ],
+            "containersWithLuggage": [
+                {"containerType": "AKE", "nbOfLuggage": 30},
+                {"containerType": "AKE", "nbOfLuggage": 38}
+            ]
+        }
+    ]
 
     pass

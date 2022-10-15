@@ -199,7 +199,7 @@ class Container:
 class LotOfLuggage:  # class for the luggage, a type of shipment
 
     def __init__(self, first_class_luggage, nb_luggage, avg_weight, container_type, number_of_luggage_by_container):
-        self.NB_LUGGAGE_BY_CONTAINER = nb_luggage
+        self.number_of_luggage_per_container = number_of_luggage_by_container
         self.avg_weight = avg_weight
         self.container_type = container_type
         self.containers = LotOfLuggage.split_luggage_into_containers(
@@ -269,31 +269,32 @@ def get_luggage():
                         DEFAULT_NB_LUGGAGE_PER_CONTAINER)
 
 
-def submit_solution(solution=[{"compartmentId": 1, "containersWithShipments": [
-    {"containerType": "PMC", "shipments": [1, 3, 4, 4, 6, 7, 8, 9, 10, 11, 12, 12]},
-    {"containerType": "PAG", "shipments": [5]}, {"containerType": "AKE", "shipments": [7]}],
-                               "containersWithLuggage": [{"containerType": "AKE", "nbOfLuggage": 30},
-                                                         {"containerType": "AKE", "nbOfLuggage": 38}]},
-                              {"compartmentId": 2,
-                               "containersWithShipments": [{"containerType": "PMC", "shipments": [2]},
-                                                           {"containerType": "PAG", "shipments": [4, 6]},
-                                                           {"containerType": "AKE", "shipments": [9]}],
-                               "containersWithLuggage": [{"containerType": "AKE", "nbOfLuggage": 38},
-                                                         {"containerType": "AKE", "nbOfLuggage": 38},
-                                                         {"containerType": "AKE", "nbOfLuggage": 38},
-                                                         {"containerType": "AKE", "nbOfLuggage": 38},
-                                                         {"containerType": "AKE", "nbOfLuggage": 38},
-                                                         {"containerType": "AKE", "nbOfLuggage": 38}]},
-                              {"compartmentId": 3,
-                               "containersWithShipments": [{"containerType": "PMC", "shipments": [8, 10]},
-                                                           {"containerType": "PAG", "shipments": [11]},
-                                                           {"containerType": "AKE", "shipments": [14]}]},
-                              {"compartmentId": 4,
-                               "containersWithShipments": [{"containerType": "PMC", "shipments": [13]},
-                                                           {"containerType": "PAG", "shipments": [12]},
-                                                           {"containerType": "AKE", "shipments": [14]}]},
-                              {"compartmentId": 5,
-                               "containersWithLuggage": [{"containerType": "AKE", "nbOfLuggage": 25}]}]):
+def submit_solution(solution=
+                    [{"compartmentId": 1, "containersWithShipments": [
+                        {"containerType": "PMC", "shipments": [1, 3, 4, 4, 6, 7, 8, 9, 10, 11, 12, 12]},
+                        {"containerType": "PAG", "shipments": [5]}, {"containerType": "AKE", "shipments": [7]}],
+                      "containersWithLuggage": [{"containerType": "AKE", "nbOfLuggage": 30},
+                                                {"containerType": "AKE", "nbOfLuggage": 38}]},
+                     {"compartmentId": 2,
+                      "containersWithShipments": [{"containerType": "PMC", "shipments": [2]},
+                                                  {"containerType": "PAG", "shipments": [4, 6]},
+                                                  {"containerType": "AKE", "shipments": [9]}],
+                      "containersWithLuggage": [{"containerType": "AKE", "nbOfLuggage": 38},
+                                                {"containerType": "AKE", "nbOfLuggage": 38},
+                                                {"containerType": "AKE", "nbOfLuggage": 38},
+                                                {"containerType": "AKE", "nbOfLuggage": 38},
+                                                {"containerType": "AKE", "nbOfLuggage": 38},
+                                                {"containerType": "AKE", "nbOfLuggage": 38}]},
+                     {"compartmentId": 3,
+                      "containersWithShipments": [{"containerType": "PMC", "shipments": [8, 10]},
+                                                  {"containerType": "PAG", "shipments": [11]},
+                                                  {"containerType": "AKE", "shipments": [14]}]},
+                     {"compartmentId": 4,
+                      "containersWithShipments": [{"containerType": "PMC", "shipments": [13]},
+                                                  {"containerType": "PAG", "shipments": [12]},
+                                                  {"containerType": "AKE", "shipments": [14]}]},
+                     {"compartmentId": 5,
+                      "containersWithLuggage": [{"containerType": "AKE", "nbOfLuggage": 25}]}]):
     """Submit solution to API."""
     response = requests.post("https://af-cargo-api-cargo.azuremicroservices.io/api/submit", json=solution)
     return response.json()
