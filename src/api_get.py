@@ -47,6 +47,11 @@ class Compartment:
         # self.length = length
         self.containers = []
         self.max_weight = max_weight
+        self.weight = 0
+
+    def add_container(self, container):
+        self.containers.append(container)
+        self.weight += container.weight
 
     def __str__(self):
         return f'Compartment({self.compartment_id}, {self.max_weight}, {self.containers})'
