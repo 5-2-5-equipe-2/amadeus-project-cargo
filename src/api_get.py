@@ -24,6 +24,11 @@ DEFAULT_CONTAINER_MAX_WEIGHT = {
     "AKE": 1587,
 }
 
+DEFAULT_COMPARTMENTS_MAX_WEIGHT = {
+    "FWD": 32005,
+    "AFT": 25655,
+}
+
 DEFAULT_CONTAINER_COMBINATIONS = {
     "FWD": [
         {
@@ -135,7 +140,7 @@ class ContainerType:
         self.length = length
         self.volume = self.width * self.height * self.length
         self.max_weight = max_weight
-        self.tare_weight = tare_weight
+        self.tare_weight = 0
 
     def __str__(self):
         return f'ContainerType({self.container_type}, {self.height}, {self.width}, {self.length})'
@@ -160,25 +165,27 @@ class Compartment:
 
 
 class Container:
-    def __init__(self, container_type: ContainerType, is_locked=False):
+    def __init__(self, container_type: ContainerType, is_required=False):
         self.container_type = container_type
         self.shipments = []
         self.occupied_volume = 0
         self.weight = container_type.tare_weight
         self.occupied_volume_percentage = 0
-        self.is_locked = is_locked
+        self.is_required = is_required
+        self.density = 0
 
     def add_shipment(self, shipment: Shipment):
         self.shipments.append(shipment)
         self.occupied_volume += shipment.volume
         self.weight += shipment.weight
         self.occupied_volume_percentage = self.occupied_volume / self.container_type.volume
+        self.density = self.weight / self.container_type.volume
 
     def full_luggage(self):
         return self.occupied_volume_percentage == 1
 
     def __str__(self):
-        return f'Container({self.container_type},{self.weight}, {self.occupied_volume_percentage}, {self.occupied_volume})'
+        return f'Container({self.is_required=}, {self.density=}, {self.container_type=}, {self.weight=}, {self.occupied_volume_percentage=}, {self.occupied_volume=})'
 
 
 class LotOfLuggage:  # class for the luggage, a type of shipment
@@ -199,10 +206,11 @@ class LotOfLuggage:  # class for the luggage, a type of shipment
         remaining_luggage = nb_luggage % number_of_luggage_by_container
         containers = []
         for _ in range(number_of_containers):
-            container = Container(container_type, is_locked=True)
+            container = Container(container_type, is_required=True)
             container.weight = avg_weight * number_of_luggage_by_container
             container.occupied_volume = container.container_type.volume
             container.occupied_volume_percentage = 1
+            container.density = container.weight / container.container_type.volume
             containers.append(container)
         if remaining_luggage > 0:
             container = Container(container_type)
@@ -210,6 +218,7 @@ class LotOfLuggage:  # class for the luggage, a type of shipment
             container.occupied_volume = container.container_type.volume * (
                     remaining_luggage / number_of_luggage_by_container)
             container.occupied_volume_percentage = container.occupied_volume / container.container_type.volume
+            container.density = container.weight / container.container_type.volume
             containers.append(container)
         return containers
 
