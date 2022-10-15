@@ -118,7 +118,7 @@ DEFAULT_CONTAINER_COMBINATIONS = {
 class Shipment:
     """Rectangle Shipment class."""
 
-    def __init__(self, weight: float, height, width, length, awb):
+    def __init__(self, weight: float, height, width, length, awb, id = 1):
         self.shipment_id = awb
         self.weight = weight
         self.awb = awb
@@ -127,6 +127,7 @@ class Shipment:
         self.length = length
         self.volume = self.width * self.height * self.length
         self.density = self.weight / self.volume
+        self.id = id
 
     def __str__(self):
         return f'Shipment({self.shipment_id}, {self.weight}, {self.width}, {self.height}, {self.length}, {self.volume}, {self.density})'

@@ -3,7 +3,7 @@ import random
 from typing import Dict, List
 from api_get import (Container, ContainerType, Shipment, get_container_types,
                      get_shipments, Compartment, LotOfLuggage, DEFAULT_CONTAINER_COMBINATIONS, get_luggage,
-                     DEFAULT_COMPARTMENTS_MAX_WEIGHT, get_compartments)
+                     DEFAULT_COMPARTMENTS_MAX_WEIGHT, get_compartments, submit_solution)
 from tqdm import tqdm
 
 VOLUME_MAX_PERCENTAGE = 0.9
@@ -130,7 +130,7 @@ def split_containers_by_compartments(container_dict: Dict[ContainerType, List[Co
 
     # start filling compartments with the highest compartment_id
     containers_combination_small, indexes = find_best_container_combination(container_dict,
-                                                                            [{"AKE": 2, "PAG": 0, "PMC": 0}],
+                                                                            [{"AKE": 0, "PAG": 0, "PMC": 0}],
                                                                             2635)
     # copy the container_dict in order to not modify it
     container_dict_without_containers = {}
@@ -173,9 +173,40 @@ if __name__ == '__main__':
     # containers[luggage.container_type].extend(luggage.containers)
     containers_combination_small, containers_combination_aft, containers_combination_fwd, container_dict = split_containers_by_compartments(
         containers, get_compartments())
+    
 
-    pass
+    submit_json = []
+    submit_json.append({"compartmentId": 1, "containersWithShipments": [], "containersWithLuggage": []})
+    for container_type in containers_combination_fwd:
+        if container_type != "max_weight":
+            for container in containers_combination_fwd[container_type]:
+                if container.is_required:
+                    submit_json[0]["containersWithLuggage"].append({"containerType": "AKE", "nbOfLuggage": container.nb_luggage})
+                else:
+                    submit_json[0]["containersWithShipments"].append({"containerType": container_type.container_type,
+                                                              "shipments": [shipment.id for shipment in container.shipments]})
+    submit_json.append({"compartmentId": 3, "containersWithShipments": [], "containersWithLuggage": []})
 
+    for container_type in containers_combination_aft:
+        if container_type != "max_weight":
+            for container in containers_combination_aft[container_type]:
+                if container.is_required:
+                    submit_json[1]["containersWithLuggage"].append({"containerType": "AKE", "nbOfLuggage": container.nb_luggage})
+                else:
+                    submit_json[1]["containersWithShipments"].append({"containerType": container_type.container_type,
+                                                                  "shipments": [shipment.id for shipment in container.shipments]})
+    
+    submit_json.append({"compartmentId": 5, "containersWithShipments": [], "containersWithLuggage": []})
+    for container_type in containers_combination_small:
+        if container_type != "max_weight":
+            for container in containers_combination_small[container_type]:
+                if container.is_required:
+                    submit_json[2]["containersWithLuggage"].append({"containerType": "AKE", "nbOfLuggage": container.nb_luggage})
+                else:
+                    submit_json[2]["containersWithShipments"].append({"containerType": container_type.container_type,
+                                                                  "shipments": [shipment.id for shipment in container.shipments]})
+    print(submit_json)
+    print(submit_solution(submit_json))
     # containers_combination_small_json = {
     #     "compartmentId": 5,
     # }
@@ -185,20 +216,7 @@ if __name__ == '__main__':
     #         container_with_shipments = []
     #
     #
-    submit_json = [
-        {
-            "compartmentId": 1,
-            "containersWithShipments":
-                [
-                    {"containerType": "PMC", "shipments": [1, 3, 4, 4, 6, 7, 8, 9, 10, 11, 12, 12]},
-                    {"containerType": "PAG", "shipments": [5]},
-                    {"containerType": "AKE", "shipments": [7]}
-                ],
-            "containersWithLuggage": [
-                {"containerType": "AKE", "nbOfLuggage": 30},
-                {"containerType": "AKE", "nbOfLuggage": 38}
-            ]
-        }
-    ]
+
+
 
     pass
