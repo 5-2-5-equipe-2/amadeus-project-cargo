@@ -1,17 +1,19 @@
-import itertools
 import random
-from copy import deepcopy
 from typing import Dict, List
-from api_get import (Container, ContainerType, Shipment, get_container_types,
-                     get_shipments, Compartment, LotOfLuggage, DEFAULT_CONTAINER_COMBINATIONS, get_luggage,
-                     DEFAULT_COMPARTMENTS_MAX_WEIGHT, get_compartments, submit_solution)
+
 from tqdm import tqdm
+
+from api_get import (DEFAULT_COMPARTMENTS_MAX_WEIGHT,
+                     DEFAULT_CONTAINER_COMBINATIONS, DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT, Compartment, Container,
+                     ContainerType, LotOfLuggage, Shipment, get_compartments,
+                     get_container_types, get_luggage, get_shipments,
+                     submit_solution)
 
 VOLUME_MAX_PERCENTAGE = 0.9
 
 
 def find_best_container_combination(container_dict_copy: Dict[ContainerType, List[Container]],
-                                    combinations: [Dict[str, int]],
+                                    combinations: List[Dict[str, int]],
                                     weight_target: float,
                                     ):
     """Find the best container combination for a compartment."""
@@ -181,6 +183,27 @@ if __name__ == '__main__':
 
     containers_combination_aft, containers_combination_fwd, container_dict = split_containers_by_compartments(
         containers, get_compartments(), container_combinations, compartments_max_weight)
+
+    compartment_1, compartment_2, compartment_3, compartment_4, compartment_5 = get_compartments()
+
+    ake=containers_combination_fwd["AKE"]
+    pag=containers_combination_fwd["PAG"]
+    pmc=containers_combination_fwd["PMC"]
+    cont1=get_compartments()[0]
+    cont2=get_compartments()[1]
+    for c1 in DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT[1]:
+        for c2 in DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT[2]:
+            if c1["AKE"] + c2["AKE"] >= len(ake) and c1["PAG"] + c2["PAG"] >= len(pag) and c1["PMC"] + c2["PMC"] >= len(pmc):
+                print(c1, c2)
+                cont1.combinations=c1
+                cont2.combinations=c2
+                break
+
+    for i in range(len(ake)):
+        if i < cont1.combinations["AKE"]:
+            cont1.add_container(ake[i])
+        else:
+            cont2.add_container(ake[i])
     containers_combination_aft[list(containers_combination_aft.keys())[0]].extend(luggage.containers)
     print("Target weight: {}".format(DEFAULT_COMPARTMENTS_MAX_WEIGHT["FWD"]))
     print("FWD weight: {}".format(containers_combination_fwd['max_weight']))
