@@ -1,22 +1,23 @@
+import itertools
 import random
+from copy import deepcopy
 from typing import Dict, List
 
-from tqdm import tqdm
+from matplotlib import pyplot as plt
 
-from api_get import (DEFAULT_COMPARTMENTS_MAX_WEIGHT,
-                     DEFAULT_CONTAINER_COMBINATIONS, DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT, Compartment, Container,
-                     ContainerType, LotOfLuggage, Shipment, get_compartments,
-                     get_container_types, get_luggage, get_shipments,
-                     submit_solution)
+from api_get import (Container, ContainerType, Shipment, get_container_types,
+                     get_shipments, Compartment, LotOfLuggage, DEFAULT_CONTAINER_COMBINATIONS, get_luggage,
+                     DEFAULT_COMPARTMENTS_MAX_WEIGHT, get_compartments, submit_solution)
+from tqdm import tqdm
 
 VOLUME_MAX_PERCENTAGE = 0.9
 
 
 def find_best_container_combination(container_dict_copy: Dict[ContainerType, List[Container]],
-                                    combinations: List[Dict[str, int]],
+                                    combinations: [Dict[str, int]],
                                     weight_target: float,
-                                    ):
-    """Find the best container combination for a compartment."""
+                                    nbtries: int):
+    """Find the best container combination for a compartment_position."""
 
     def try_combination():
         # find calculate the max weight of each combination
@@ -45,7 +46,7 @@ def find_best_container_combination(container_dict_copy: Dict[ContainerType, Lis
         return best_combination
 
     # find the best combination closest to the target without exceeding it
-    number_of_tries = 200000
+    number_of_tries = nbtries
     best_combination = None
     curr_max = float('-inf')
     for _ in tqdm(range(number_of_tries)):
@@ -64,12 +65,12 @@ def find_best_container_combination(container_dict_copy: Dict[ContainerType, Lis
 
 
 def sort_shipments(shipments: List[Shipment], container_types: List[ContainerType]):
-    """Sort shipments by size and density, to place them more effectively"""
+    """Sort _shipments by size and density, to place them more effectively"""
     shipments_dict = {}
 
     # sort container types by volume
     container_types.sort(key=lambda x: x.height * x.width * x.length)
-    # test if the shipments fit in the AKE, else, put them in PAG or PMC
+    # test if the _shipments fit in the AKE, else, put them in PAG or PMC
     for shipment in shipments:
         for container_type in container_types:
             if shipment.width <= container_type.width \
@@ -81,7 +82,7 @@ def sort_shipments(shipments: List[Shipment], container_types: List[ContainerTyp
                 else:
                     shipments_dict[container_type] = [shipment]
                 break
-    # sort shipments by density
+    # sort _shipments by density
     for container_type in shipments_dict:
         shipments_dict[container_type].sort(
             key=lambda _shipment: _shipment.density, reverse=True)
@@ -90,7 +91,7 @@ def sort_shipments(shipments: List[Shipment], container_types: List[ContainerTyp
 
 
 def split_shipments_by_containers(shipments: List[Shipment], container_types: List[ContainerType]):
-    """Split shipments by container types."""
+    """Split _shipments by container types."""
     shipments_dict = sort_shipments(shipments, container_types)
     container_dict = {}
 
@@ -112,7 +113,7 @@ def split_shipments_by_containers(shipments: List[Shipment], container_types: Li
 def split_containers_by_compartments(container_dict: Dict[ContainerType, List[Container]],
                                      compartments: List[Compartment],
                                      container_combinations: [Dict[str, List[Dict[str, int]]]],
-                                     compartments_max_weight: Dict[str, float]):
+                                     compartments_max_weight: Dict[str, float], nbtries: int):
     """Split containers by compartments."""
     compartments_dict = {}
     # sort compartments by compartment_id
@@ -131,7 +132,8 @@ def split_containers_by_compartments(container_dict: Dict[ContainerType, List[Co
 
     containers_combination_aft, indexes = find_best_container_combination(container_dict_without_containers,
                                                                           container_combinations["AFT"],
-                                                                          compartments_max_weight["AFT"])
+                                                                          compartments_max_weight["AFT"]
+                                                                          , nbtries)
     container_dict_without_containers2 = {}
     for container_type in container_dict_without_containers:
         container_dict_without_containers2[container_type] = []
@@ -140,21 +142,22 @@ def split_containers_by_compartments(container_dict: Dict[ContainerType, List[Co
                 container_dict_without_containers2[container_type].append(container)
     containers_combination_fwd, indexes = find_best_container_combination(container_dict_without_containers2,
                                                                           container_combinations["FWD"],
-                                                                          compartments_max_weight["FWD"])
+                                                                          compartments_max_weight["FWD"],
+                                                                          nbtries)
 
-    return containers_combination_aft, containers_combination_fwd, container_dict
+    return((containers_combination_aft["max_weight"]/23847.3+ containers_combination_fwd["max_weight"]/14800)/2)
 
 
-# find the containers that add up the closest to the max_weight of the compartment
+# find the containers that add up the closest to the max_weight of the compartment_position
 if __name__ == '__main__':
-    # Get all shipments
+    # Get all _shipments
     shipments = get_shipments()
     # Get all container types
     container_types: [ContainerType] = get_container_types()
-    # container_types = list(filter(lambda x: x.container_type != "PAG", container_types))
-    # Sort shipments by size
+    # _container_types = list(filter(lambda x: x.container_type != "PAG", _container_types))
+    # Sort _shipments by size
     sorted_shipments = sort_shipments(shipments, container_types)
-    # Split shipments by container types
+    # Split _shipments by container types
     containers = split_shipments_by_containers(shipments, container_types)
     # add luggage to containers
 
@@ -180,30 +183,27 @@ if __name__ == '__main__':
             compartments_max_weight[compartment] = DEFAULT_COMPARTMENTS_MAX_WEIGHT[compartment] - luggage.total_weight
         else:
             compartments_max_weight[compartment] = DEFAULT_COMPARTMENTS_MAX_WEIGHT[compartment]
+    #make curve of the best container combination with matplotlib
+    results=[]
+    indexes=[]
+    for nb_stes in range(800, 2000,50):
+        result = 0
+        for i in range(0, 50):
+            result+=split_containers_by_compartments(containers, get_compartments(), container_combinations,
+                                                           compartments_max_weight, nb_stes)
+        results.append(result/50)
+        indexes.append(nb_stes)
+        print(nb_stes)
+    plt.plot(indexes, results)
+    print(results)
+    print(indexes)
+    plt.show()
 
-    containers_combination_aft, containers_combination_fwd, container_dict = split_containers_by_compartments(
-        containers, get_compartments(), container_combinations, compartments_max_weight)
+    cuntest= 0
+    for i in range(1000):
+        cuntest+=split_containers_by_compartments(containers, get_compartments(), container_combinations, compartments_max_weight,1)
 
-    compartment_1, compartment_2, compartment_3, compartment_4, compartment_5 = get_compartments()
-
-    ake=containers_combination_fwd["AKE"]
-    pag=containers_combination_fwd["PAG"]
-    pmc=containers_combination_fwd["PMC"]
-    cont1=get_compartments()[0]
-    cont2=get_compartments()[1]
-    for c1 in DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT[1]:
-        for c2 in DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT[2]:
-            if c1["AKE"] + c2["AKE"] >= len(ake) and c1["PAG"] + c2["PAG"] >= len(pag) and c1["PMC"] + c2["PMC"] >= len(pmc):
-                print(c1, c2)
-                cont1.combinations=c1
-                cont2.combinations=c2
-                break
-
-    for i in range(len(ake)):
-        if i < cont1.combinations["AKE"]:
-            cont1.add_container(ake[i])
-        else:
-            cont2.add_container(ake[i])
+    print(cuntest/1000)
     containers_combination_aft[list(containers_combination_aft.keys())[0]].extend(luggage.containers)
     print("Target weight: {}".format(DEFAULT_COMPARTMENTS_MAX_WEIGHT["FWD"]))
     print("FWD weight: {}".format(containers_combination_fwd['max_weight']))
@@ -222,7 +222,7 @@ if __name__ == '__main__':
                         {"containerType": "AKE", "nbOfLuggage": container.nb_luggage})
                 else:
                     submit_json[0]["containersWithShipments"].append({"containerType": container_type.container_type,
-                                                                      "shipments": [shipment.id for shipment in
+                                                                      "_shipments": [shipment._id for shipment in
                                                                                     container.shipments]})
     submit_json.append({"compartmentId": 3, "containersWithShipments": [], "containersWithLuggage": []})
 
@@ -234,7 +234,7 @@ if __name__ == '__main__':
                         {"containerType": "AKE", "nbOfLuggage": container.nb_luggage})
                 else:
                     submit_json[1]["containersWithShipments"].append({"containerType": container_type.container_type,
-                                                                      "shipments": [shipment.id for shipment in
+                                                                      "_shipments": [shipment._id for shipment in
                                                                                     container.shipments]})
 
     submit_json.append({"compartmentId": 5, "containersWithShipments": [],
@@ -251,5 +251,4 @@ if __name__ == '__main__':
     #         container_with_shipments = []
     #
     #
-
     pass

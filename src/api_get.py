@@ -6,9 +6,9 @@ import requests
 
 # GET https://af-cargo-api-cargo.azuremicroservices.io/api/compartment to retrieve all compartments
 # GET https://af-cargo-api-cargo.azuremicroservices.io/api/container to retrieve all container types
-# GET https://af-cargo-api-cargo.azuremicroservices.io/api/shipment to retrieve all shipments
+# GET https://af-cargo-api-cargo.azuremicroservices.io/api/shipment to retrieve all _shipments
 # GET https://af-cargo-api-cargo.azuremicroservices.io/api/luggage to retrieve nb of Luggage and average weight
-# POST https://af-cargo-api-cargo.azuremicroservices.io/api/submit to submit your answer with an object containing the 5 compartment with their containers and shipments (shipment id list).
+# POST https://af-cargo-api-cargo.azuremicroservices.io/api/submit to submit your answer with an object containing the 5 compartment_position with their containers and _shipments (shipment _id list).
 # POST http://localhost:8081/api/graph to transform the solution into the image (base64 encoded)
 DEFAULT_LUGGAGE_CONTAINER = 'AKE'
 DEFAULT_NB_LUGGAGE_PER_CONTAINER = 38
@@ -346,7 +346,7 @@ def get_container_types():
 
 @lru_cache(maxsize=None)
 def get_shipments():
-    """Get all shipments from API."""
+    """Get all _shipments from API."""
     response = requests.get("https://af-cargo-api-cargo.azuremicroservices.io/api/shipment")
     return [Shipment(shipment["weight"], shipment["height"], shipment["width"], shipment["length"], shipment["awb"],shipment["id"]) for
             shipment in response.json()]
@@ -354,7 +354,7 @@ def get_shipments():
 
 @lru_cache(maxsize=None)
 def get_luggage():
-    """Get all shipments from API."""
+    """Get all _shipments from API."""
     response = requests.get("https://af-cargo-api-cargo.azuremicroservices.io/api/luggage").json()
     return LotOfLuggage(response["nbFirstClassLuggage"], response["nbLuggage"], response["avgWeight"],
                         list(filter(lambda x: x.container_type == DEFAULT_LUGGAGE_CONTAINER, get_container_types()))[0],
@@ -363,14 +363,14 @@ def get_luggage():
 
 def submit_solution(solution=
                     [{"compartmentId": 1, "containersWithShipments": [
-                        {"containerType": "PMC", "shipments": [1, 3, 4, 4, 6, 7, 8, 9, 10, 11, 12, 12]},
-                        {"containerType": "PAG", "shipments": [5]}, {"containerType": "AKE", "shipments": [7]}],
+                        {"containerType": "PMC", "_shipments": [1, 3, 4, 4, 6, 7, 8, 9, 10, 11, 12, 12]},
+                        {"containerType": "PAG", "_shipments": [5]}, {"containerType": "AKE", "_shipments": [7]}],
                       "containersWithLuggage": [{"containerType": "AKE", "nbOfLuggage": 30},
                                                 {"containerType": "AKE", "nbOfLuggage": 38}]},
                      {"compartmentId": 2,
-                      "containersWithShipments": [{"containerType": "PMC", "shipments": [2]},
-                                                  {"containerType": "PAG", "shipments": [4, 6]},
-                                                  {"containerType": "AKE", "shipments": [9]}],
+                      "containersWithShipments": [{"containerType": "PMC", "_shipments": [2]},
+                                                  {"containerType": "PAG", "_shipments": [4, 6]},
+                                                  {"containerType": "AKE", "_shipments": [9]}],
                       "containersWithLuggage": [{"containerType": "AKE", "nbOfLuggage": 38},
                                                 {"containerType": "AKE", "nbOfLuggage": 38},
                                                 {"containerType": "AKE", "nbOfLuggage": 38},
@@ -378,13 +378,13 @@ def submit_solution(solution=
                                                 {"containerType": "AKE", "nbOfLuggage": 38},
                                                 {"containerType": "AKE", "nbOfLuggage": 38}]},
                      {"compartmentId": 3,
-                      "containersWithShipments": [{"containerType": "PMC", "shipments": [8, 10]},
-                                                  {"containerType": "PAG", "shipments": [11]},
-                                                  {"containerType": "AKE", "shipments": [14]}]},
+                      "containersWithShipments": [{"containerType": "PMC", "_shipments": [8, 10]},
+                                                  {"containerType": "PAG", "_shipments": [11]},
+                                                  {"containerType": "AKE", "_shipments": [14]}]},
                      {"compartmentId": 4,
-                      "containersWithShipments": [{"containerType": "PMC", "shipments": [13]},
-                                                  {"containerType": "PAG", "shipments": [12]},
-                                                  {"containerType": "AKE", "shipments": [14]}]},
+                      "containersWithShipments": [{"containerType": "PMC", "_shipments": [13]},
+                                                  {"containerType": "PAG", "_shipments": [12]},
+                                                  {"containerType": "AKE", "_shipments": [14]}]},
                      {"compartmentId": 5,
                       "containersWithLuggage": [{"containerType": "AKE", "nbOfLuggage": 25}]}]):
     """Submit solution to API."""
@@ -393,7 +393,7 @@ def submit_solution(solution=
 
 
 def get_graph(solution={"law": 167608.3, "warnings": [
-    {"error": {"code": "WARN01", "message": "The submitted shipment list is not complete. You forgot 84 shipments"},
+    {"error": {"code": "WARN01", "message": "The submitted shipment list is not complete. You forgot 84 _shipments"},
      "stackTrace": [], "suppressedExceptions": []}], "zfwCg": 52.00591, "toCg": 48.00749, "zfw": 160009.3,
                         "fwdLimit": 28.718961908839653, "aftLimit": 85.90082412664209, "tow": 228225.3,
                         "ldCg": 52.63887}):
