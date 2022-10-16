@@ -227,6 +227,11 @@ class Compartment:
     def add_container(self, container):
         self.containers.append(container)
         self.weight += container.weight
+        if self.combinations:
+            self.combinations[container.container_type.container_type] -= 1
+    
+    def set_combinations(self, combination):
+        self.combinations = combination
 
     def __str__(self):
         return f'Compartment({self.compartment_id}, {self.max_weight}, {self.containers})'

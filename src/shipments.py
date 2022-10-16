@@ -186,11 +186,24 @@ if __name__ == '__main__':
 
     compartment_1, compartment_2, compartment_3, compartment_4, compartment_5 = get_compartments()
 
-    containers_combination_fwd[]
-
+    ake=containers_combination_fwd["AKE"]
+    pag=containers_combination_fwd["PAG"]
+    pmc=containers_combination_fwd["PMC"]
+    cont1=get_compartments()[0]
+    cont2=get_compartments()[1]
     for c1 in DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT[1]:
         for c2 in DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT[2]:
+            if c1["AKE"] + c2["AKE"] >= len(ake) and c1["PAG"] + c2["PAG"] >= len(pag) and c1["PMC"] + c2["PMC"] >= len(pmc):
+                print(c1, c2)
+                cont1.combinations=c1
+                cont2.combinations=c2
+                break
 
+    for i in range(len(ake)):
+        if i < cont1.combinations["AKE"]:
+            cont1.add_container(ake[i])
+        else:
+            cont2.add_container(ake[i])
     containers_combination_aft[list(containers_combination_aft.keys())[0]].extend(luggage.containers)
     print("Target weight: {}".format(DEFAULT_COMPARTMENTS_MAX_WEIGHT["FWD"]))
     print("FWD weight: {}".format(containers_combination_fwd['max_weight']))
