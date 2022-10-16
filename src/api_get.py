@@ -129,6 +129,11 @@ DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT = {
         "PMC" : 1,
         "PAG" : 0,
         "AKE" : 6
+    },
+    {
+        "PMC" : 0,
+        "PAG" : 0,
+        "AKE" : 10
     }],
     2: [{
         "PMC" : 3,
@@ -144,7 +149,12 @@ DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT = {
         "PMC" : 1,
         "PAG" : 1,
         "AKE" : 4
-    }],
+    },
+    {
+        "PMC" : 0,
+        "PAG" : 0,
+        "AKE" : 10
+        }],
     3: [{
         "PMC" : 3,
         "PAG" : 0,
@@ -159,6 +169,11 @@ DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT = {
         "PMC" : 1,
         "PAG" : 1,
         "AKE" : 2
+    },
+    {
+        "PMC" : 0,
+        "PAG" : 0,
+        "AKE" : 8
     }],
     4: [{
         "PMC" : 2,
@@ -174,6 +189,11 @@ DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT = {
         "PMC" : 0,
         "PAG" : 0,
         "AKE" : 8
+    },
+    {
+        "PMC" : 0,
+        "PAG" : 0,
+        "AKE" : 6
     }],
 }
 
