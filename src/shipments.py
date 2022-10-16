@@ -45,7 +45,7 @@ def find_best_container_combination(container_dict_copy: Dict[ContainerType, Lis
         return best_combination
 
     # find the best combination closest to the target without exceeding it
-    number_of_tries = 200000
+    number_of_tries = 10000
     best_combination = None
     curr_max = float('-inf')
     for _ in tqdm(range(number_of_tries)):
@@ -145,6 +145,7 @@ def split_containers_by_compartments(container_dict: Dict[ContainerType, List[Co
     return containers_combination_aft, containers_combination_fwd, container_dict
 
 
+
 # find the containers that add up the closest to the max_weight of the compartment
 if __name__ == '__main__':
     # Get all shipments
@@ -184,27 +185,27 @@ if __name__ == '__main__':
     containers_combination_aft, containers_combination_fwd, container_dict = split_containers_by_compartments(
         containers, get_compartments(), container_combinations, compartments_max_weight)
 
-    compartment_1, compartment_2, compartment_3, compartment_4, compartment_5 = get_compartments()
+    # compartment_1, compartment_2, compartment_3, compartment_4, compartment_5 = get_compartments()
 
-    ake=containers_combination_fwd["AKE"]
-    pag=containers_combination_fwd["PAG"]
-    pmc=containers_combination_fwd["PMC"]
-    cont1=get_compartments()[0]
-    cont2=get_compartments()[1]
-    for c1 in DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT[1]:
-        for c2 in DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT[2]:
-            if c1["AKE"] + c2["AKE"] >= len(ake) and c1["PAG"] + c2["PAG"] >= len(pag) and c1["PMC"] + c2["PMC"] >= len(pmc):
-                print(c1, c2)
-                cont1.combinations=c1
-                cont2.combinations=c2
-                break
+    # ake=containers_combination_fwd["AKE"]
+    # pag=containers_combination_fwd["PAG"]
+    # pmc=containers_combination_fwd["PMC"]
+    # cont1=get_compartments()[0]
+    # cont2=get_compartments()[1]
+    # for c1 in DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT[1]:
+    #     for c2 in DEFAULT_MAX_CONTAINERS_BY_COMPARTMENT[2]:
+    #         if c1["AKE"] + c2["AKE"] >= len(ake) and c1["PAG"] + c2["PAG"] >= len(pag) and c1["PMC"] + c2["PMC"] >= len(pmc):
+    #             print(c1, c2)
+    #             cont1.combinations=c1
+    #             cont2.combinations=c2
+    #             break
 
-    for i in range(len(ake)):
-        if i < cont1.combinations["AKE"]:
-            cont1.add_container(ake[i])
-        else:
-            cont2.add_container(ake[i])
-    containers_combination_aft[list(containers_combination_aft.keys())[0]].extend(luggage.containers)
+    # for i in range(len(ake)):
+    #     if i < cont1.combinations["AKE"]:
+    #         cont1.add_container(ake[i])
+    #     else:
+    #         cont2.add_container(ake[i])
+    # containers_combination_aft[list(containers_combination_aft.keys())[0]].extend(luggage.containers)
     print("Target weight: {}".format(DEFAULT_COMPARTMENTS_MAX_WEIGHT["FWD"]))
     print("FWD weight: {}".format(containers_combination_fwd['max_weight']))
 
